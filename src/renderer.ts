@@ -1,4 +1,7 @@
-class Renderer {
+import ray_trace_kernel from "./shaders/ray_trace_kernel.wgsl"
+import screen_shader from "./shaders/screen_shader.wgsl"
+
+export class Renderer {
   canvas: HTMLCanvasElement;
   adapter: GPUAdapter | undefined;
   device: GPUDevice | undefined;

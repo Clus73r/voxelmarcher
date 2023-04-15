@@ -1,3 +1,5 @@
+import { Renderer } from "./renderer";
+
 const canvas = <HTMLCanvasElement>document.getElementById("canv");
 const fps = <HTMLParagraphElement>document.getElementById("fps");
 const renderer = new Renderer(canvas);
