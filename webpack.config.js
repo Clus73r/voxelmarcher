@@ -2,6 +2,7 @@ const path = require('path')
 
 module.exports = {
     context: __dirname,
+    mode: "production",
     entry: "./src/main.ts",
     output: {
         filename: "main.js",

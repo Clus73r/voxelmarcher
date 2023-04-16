@@ -11,6 +11,7 @@
   "dependencies": {
     "@types/node": "^18.15.11",
     "@webgpu/types": "^0.1.30",
+    "gl-matrix": "^3.4.3",
     "ts-loader": "^9.4.2",
     "ts-shader-loader": "^2.0.2",
     "webpack": "^5.79.0",

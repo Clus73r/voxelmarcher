@@ -1,5 +1,7 @@
+import { Scene } from "./scene";
 import ray_trace_kernel from "./shaders/ray_trace_kernel.wgsl"
 import screen_shader from "./shaders/screen_shader.wgsl"
+import { mat3 } from "gl-matrix";
 
 export class Renderer {
   canvas: HTMLCanvasElement;
@@ -11,18 +13,21 @@ export class Renderer {
   color_buffer: GPUTexture | undefined;
   color_buffer_view: GPUTextureView | undefined;
   sampler: GPUSampler | undefined;
+  sceneParameters: GPUBuffer | undefined;
 
   ray_tracing_bind_group: GPUBindGroup | undefined;
   ray_tracing_pipeline: GPUComputePipeline | undefined;
 
   screen_bind_group: GPUBindGroup | undefined;
   screen_pipeline: GPURenderPipeline | undefined;
+  scene: Scene;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, scene: Scene) {
     this.canvas = canvas;
+    this.scene = scene;
   }
 
-  async Initialize() {
+  async initialize() {
     await this.setupDevice();
     await this.createAssets();
     await this.setupPipeline();
@@ -58,6 +63,10 @@ export class Renderer {
       mipmapFilter: "nearest",
       maxAnisotropy: 1,
     });
+    this.sceneParameters = this.device?.createBuffer({
+      size: 64,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    })
   }
 
   async setupPipeline() {
@@ -73,6 +82,13 @@ export class Renderer {
               viewDimension: "2d",
             },
           },
+	  {
+	    binding: 1,
+	    visibility: GPUShaderStage.COMPUTE,
+	    buffer: {
+	      type: "uniform"
+	    }
+	  }
         ],
       })
     );
@@ -82,6 +98,7 @@ export class Renderer {
       label: "Ray tracing bind group",
       entries: [
         { binding: 0, resource: <GPUTextureView>this.color_buffer_view },
+        { binding: 1, resource: <GPUBufferBinding>{ buffer: this.sceneParameters } },
       ],
     });
 
@@ -141,6 +158,29 @@ export class Renderer {
   }
 
   render = () => {
+
+    this.device?.queue.writeBuffer(
+      <GPUBuffer>this.sceneParameters, 0,
+      new Float32Array(
+	[
+	  this.scene.camera.position[0],
+	  this.scene.camera.position[1],
+	  this.scene.camera.position[2],
+	  0.0,
+	  this.scene.camera.forward[0],
+	  this.scene.camera.forward[1],
+	  this.scene.camera.forward[2],
+	  0.0,
+	  this.scene.camera.right[0],
+	  this.scene.camera.right[1],
+	  this.scene.camera.right[2],
+	  0.0,
+	  this.scene.camera.up[0],
+	  this.scene.camera.up[1],
+	  this.scene.camera.up[2],
+	  0.0,
+	]), 0, 16);
+
     const commandEncoder = this.device?.createCommandEncoder();
 
     const ray_trace_pass = commandEncoder?.beginComputePass();
@@ -168,7 +208,7 @@ export class Renderer {
     renderPass?.setBindGroup(0, <GPUBindGroup> this.screen_bind_group)
     renderPass?.draw(6, 1, 0, 0);
     renderPass?.end();
-
+    
     this.device?.queue.submit([<GPUCommandBuffer>commandEncoder?.finish()]);
   };
 }
