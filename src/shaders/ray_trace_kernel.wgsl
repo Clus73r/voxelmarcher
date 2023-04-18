@@ -5,23 +5,41 @@ const grid_size: i32 = 2;
 const voxel_count: i32 = 4;
 const voxel_size: f32 = f32(grid_size) / f32(voxel_count);
 
+const voxel_data: VoxelData = VoxelData(
+array<i32, 64>(
+	1, 1, 1, 1,
+	1, 1, 1, 1,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+	1, 1, 1, 1,
+	1, 1, 1, 1,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+	1, 1, 1, 1,
+	1, 1, 1, 1,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+	1, 1, 1, 1,
+	1, 1, 1, 1,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+));
+
 struct Ray {
     origin: vec3<f32>,
     direction: vec3<f32>,
     inv_direction: vec3<f32>,
 }
 
-struct Sphere {
-    center: vec3<f32>,
-        color: vec3<f32>,
-	    radius: f32,
-	    }
-
 struct SceneData {
     cameraPos: vec3<f32>,
     cameraForwards: vec3<f32>,
     cameraRight: vec3<f32>,
     cameraUp: vec3<f32>,
+}
+
+struct VoxelData {
+	data: array<i32, 64>,
 }
 
 @compute @workgroup_size(1,1,1)
@@ -47,22 +65,15 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     if (ray_box_intersection(ray, boundary_min, boundary_max, &tmin, &tmax)){
     	let ray_hit = ray.origin + ray_direction * tmin;
 	let hit_disc = vec3<i32>(
-		i32((ray_hit[0] - boundary_min[0]) / f32(voxel_size)),
-		i32((ray_hit[1] - boundary_min[1]) / f32(voxel_size)),
-		i32((ray_hit[2] - boundary_min[2]) / f32(voxel_size)));
+		min(voxel_count - 1, i32((ray_hit[0] - boundary_min[0]) / f32(voxel_size))),
+		min(voxel_count - 1, i32((ray_hit[1] - boundary_min[1]) / f32(voxel_size))),
+		min(voxel_count - 1, i32((ray_hit[2] - boundary_min[2]) / f32(voxel_size))));
 
 	pixel_color = vec3<f32>(
 		f32(hit_disc[0]) / f32(voxel_count),
 		f32(hit_disc[1]) / f32(voxel_count),
 		f32(hit_disc[2]) / f32(voxel_count));
-    }
 
-    var mySphere: Sphere;
-    mySphere.center = vec3<f32>(-3.0, 0.0, 0.0);
-    mySphere.radius = 0.1;
-    
-    if (hit(ray, mySphere)) {
-        pixel_color = vec3<f32>(0.5, 1.0, 0.75);
     }
 
     textureStore(color_buffer, screen_pos, vec4<f32>(pixel_color, 1.0));
@@ -80,13 +91,6 @@ fn ray_box_intersection(ray: Ray, bmin: vec3<f32>, bmax: vec3<f32>, tmin: ptr<fu
     return *tmin <= *tmax;
 }
 
-fn hit(ray: Ray, sphere: Sphere) -> bool {
-    
-        let a: f32 = dot(ray.direction, ray.direction);
-	    let b: f32 = 2.0 * dot(ray.direction, ray.origin - sphere.center);
-	        let c: f32 = dot(ray.origin - sphere.center, ray.origin - sphere.center) - sphere.radius * sphere.radius;
-		    let discriminant: f32 = b * b - 4.0 * a * c;
-
-		        return discriminant > 0;
-			    
-			    }
+fn get_voxel(x: i32, y: i32, z: i32) -> i32 {
+	return voxel_data.data[z * grid_size * grid_size + y * grid_size + x];
+}
