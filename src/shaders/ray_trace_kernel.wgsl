@@ -1,8 +1,9 @@
 @group(0) @binding(0) var color_buffer: texture_storage_2d<rgba8unorm, write>;
 @group(0) @binding(1) var<uniform> scene: SceneData;
 
-const grid_size: u32 = 10;
-const voxel_size: f32 = 10;
+const grid_size: i32 = 2;
+const voxel_count: i32 = 4;
+const voxel_size: f32 = f32(grid_size) / f32(voxel_count);
 
 struct Ray {
     origin: vec3<f32>,
@@ -31,23 +32,34 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let horizontal_coefficient: f32 = (f32(screen_pos.x) - f32(screen_size.x) / 2) / f32(screen_size.x);
     let vertical_coefficient: f32 = (f32(screen_pos.y) - f32(screen_size.y) / 2) / f32(screen_size.y);
 
-    var pixel_color : vec3<f32> = vec3<f32>(f32(screen_pos[0]) / f32(screen_size[0]), 0.0, 0.25);
-
-    let aabbmin: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
-    let aabbmax: vec3<f32> = vec3<f32>(2.0, 2.0, 2.0);
+    let boundary_min: vec3<f32> = vec3<f32>(-1.0, -1.0, -1.0);
+    let boundary_max: vec3<f32> = vec3<f32>(1.0, 1.0, 1.0);
 
     let ray_direction = normalize(scene.cameraForwards
 	+ horizontal_coefficient * scene.cameraRight
 	+ vertical_coefficient * scene.cameraUp);
-    let ray: Ray = Ray(ray_direction, scene.cameraPos, 1 / ray_direction);
+    let ray: Ray = Ray(scene.cameraPos, ray_direction, 1 / ray_direction);
 
-    if (ray_box_intersection(ray, aabbmin, aabbmax)){
-	pixel_color = vec3<f32>(0.0, 0.0, 0.0);
+    var pixel_color : vec3<f32> = vec3<f32>(ray_direction[0], ray_direction[1], ray_direction[2]);
+
+    var<function> tmin: f32 = 0.0;
+    var<function> tmax: f32 = 300000000;
+    if (ray_box_intersection(ray, boundary_min, boundary_max, &tmin, &tmax)){
+    	let ray_hit = ray.origin + ray_direction * tmin;
+	let hit_disc = vec3<i32>(
+		i32((ray_hit[0] - boundary_min[0]) / f32(voxel_size)),
+		i32((ray_hit[1] - boundary_min[1]) / f32(voxel_size)),
+		i32((ray_hit[2] - boundary_min[2]) / f32(voxel_size)));
+
+	pixel_color = vec3<f32>(
+		f32(hit_disc[0]) / f32(voxel_count),
+		f32(hit_disc[1]) / f32(voxel_count),
+		f32(hit_disc[2]) / f32(voxel_count));
     }
 
-        var mySphere: Sphere;
-	    mySphere.center = vec3<f32>(-3.0, 0.0, 0.0);
-	        mySphere.radius = 0.1;
+    var mySphere: Sphere;
+    mySphere.center = vec3<f32>(-3.0, 0.0, 0.0);
+    mySphere.radius = 0.1;
     
     if (hit(ray, mySphere)) {
         pixel_color = vec3<f32>(0.5, 1.0, 0.75);
@@ -56,19 +68,16 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     textureStore(color_buffer, screen_pos, vec4<f32>(pixel_color, 1.0));
 }
 
-fn ray_box_intersection(ray: Ray, bmin: vec3<f32>, bmax: vec3<f32>) -> bool {
-    var tmin: f32 = 0.0;
-    var tmax: f32 = 300000000;
-
+fn ray_box_intersection(ray: Ray, bmin: vec3<f32>, bmax: vec3<f32>, tmin: ptr<function, f32>, tmax: ptr<function, f32>) -> bool {
     for (var d: i32 = 0; d < 3; d++) {
 	let t1 = (bmin[d] - ray.origin[d]) * ray.inv_direction[d];
 	let t2 = (bmax[d] - ray.origin[d]) * ray.inv_direction[d];
 
-	tmin = min(max(t1, tmin), max(t2, tmin));
-	tmax = max(min(t1, tmax), min(t2, tmax));
+	*tmin = min(max(t1, *tmin), max(t2, *tmin));
+	*tmax = max(min(t1, *tmax), min(t2, *tmax));
     }
 
-    return tmin <= tmax;
+    return *tmin <= *tmax;
 }
 
 fn hit(ray: Ray, sphere: Sphere) -> bool {
