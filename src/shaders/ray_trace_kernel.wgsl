@@ -102,9 +102,8 @@ fn voxel_ray_any(ray: Ray) -> bool {
 		i32(sign(ray.direction[2])),
 	);
 
-	let tmax_comp: vec<f32> = vec3<f32>(
-		//step[0] == 0 ? {tmax : tmin + (boundary_min[0] + (voxel[0] - (ray.direction[0] < 0 ? 1 : 0)) * voxel_size - ray.origin[0]) / ray.direction[0]},
-		0,
+	let tmax_comp: vec3<f32> = vec3<f32>(
+		step[0] == 0 ? {tmax : tmin + (boundary_min[0] + (voxel[0] - (ray.direction[0] < 0 ? 1 : 0)) * voxel_size - ray.origin[0]) / ray.direction[0]},
 		0,
 		0,
 		//step[1] == 0 ? tmax : tmin + (boundary_min[1] + (voxel[1] - (ray.direction[1] < 0 ? 1 : 0)) * voxel_size - ray.origin[1]) / ray.direction[1],
