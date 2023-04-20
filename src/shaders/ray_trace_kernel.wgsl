@@ -49,7 +49,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 
 	var hit: RayHit;
     if (voxel_ray_any(ray, &hit)){
-	    pixel_color = vec3<f32>(hit.position + 1) / 2;
+	    pixel_color = vec3<f32>((hit.position - boundary_min) / f32(voxel_count));
     }
     textureStore(color_buffer, screen_pos, vec4<f32>(pixel_color, 1.0));
 }
@@ -76,20 +76,24 @@ fn voxel_ray_any(ray: Ray, hit: ptr<function, RayHit>) -> bool {
 	var tmax_comp: vec3<f32> = vec3<f32>(0, 0, 0);
 	var tdelta: vec3<f32> = vec3<f32>(0, 0, 0);
 	var step: vec3<i32> = vec3<i32>(0, 0, 0);
+	let next_voxel: vec3<i32> = voxel + step;
+
+	var current_index: vec3<i32> = vec3<i32>(0, 0, 0);
 
 	for (var d: i32; d < 3; d++){
 		if (ray.direction[d] > 0.0){
 			step[d] = 1;
-			tdelta[d] = 1 / ray.direction[d] * voxel_size;
-			tmax_comp[d] = tmin + (boundary_min[d] + f32(voxel[d]) * voxel_size - ray_hit[d]) / ray.direction[d];
+			current_index[d] = i32(max(0, floor((ray.origin[d] - boundary_min[d]) / voxel_size)));
+			tdelta[d] = voxel_size / ray.direction[d];
+			//tmax_comp[d] = tmin + (boundary_min[d] + f32(next_voxel[d]) * voxel_size - ray_hit[d]) / ray.direction[d];
+			tmax_comp[d] = tmin + (boundary_min[d] + f32(current_index[d]) * voxel_size - ray_hit[d]) / ray.direction[d];
+
 		} else if (ray.direction[d] < 0.0){
-			return false;
 			step[d] = -1;
 			tdelta[d] = voxel_size / (-ray.direction[d]);
 			let prev_voxel: i32 = voxel[d] - 1;
 			tmax_comp[d] = tmin + (boundary_min[d] + f32(prev_voxel) * voxel_size - ray_hit[d]) / ray.direction[d];
 		} else {
-			return false;
 			step[d] = 0;
 			tdelta[d] = tmax;
 			tmax_comp[d] = tmax;
