@@ -3,6 +3,7 @@ const path = require('path')
 module.exports = {
     context: __dirname,
     mode: "production",
+    devtool: "source-map",
     entry: "./src/main.ts",
     output: {
         filename: "main.js",

@@ -1,5 +1,6 @@
 import { vec3, mat4 } from "gl-matrix";
 import { Deg2Rad } from "./math_util";
+import { Ray } from "./scene";
 
 export class FPCamera {
 	forward: vec3;
@@ -21,7 +22,7 @@ export class FPCamera {
 		this.view = mat4.create();
 		this.update();
 		this.inputs = [false, false, false, false, false, false];
-		this.speed = 1;
+		this.speed = 4;
 	}
 
 	tick(deltaTime: number) {
@@ -41,6 +42,7 @@ export class FPCamera {
 
 		vec3.normalize(movement_vec, movement_vec);
 		vec3.add(this.position, this.position, vec3.scale(vec3.create(), movement_vec, this.speed * deltaTime))
+		// console.log(this.position);
 	}
 
 	update() {
@@ -53,10 +55,14 @@ export class FPCamera {
 		vec3.cross(this.up, this.right, this.forward);
 		var target: vec3 = vec3.create();
 		vec3.add(target, this.position, this.forward);
+
+		// this.forward = [1, 0, 0];
+		// this.right = [0, 1, 0];
+		// this.up = [0, 0, 1];
 	}
 
 	mouse_move(inst: FPCamera, e: MouseEvent) {
-		inst.eulers[1] = (inst.eulers[1] + e.movementY) % 360;
+		inst.eulers[1] = (inst.eulers[1] - e.movementY) % 360;
 		inst.eulers[2] = (inst.eulers[2] - e.movementX) % 360;
 		inst.update();
 	}
@@ -66,8 +72,8 @@ export class FPCamera {
 		if (e.key == 'd') inst.inputs[2] = true;
 		if (e.key == 'f') inst.inputs[1] = true;
 		if (e.key == 's') inst.inputs[3] = true;
-		if (e.key == 'r') inst.inputs[5] = true;
-		if (e.key == 'w') inst.inputs[4] = true;
+		if (e.key == 'r') inst.inputs[4] = true;
+		if (e.key == 'w') inst.inputs[5] = true;
 	}
 
 	keyboard_up(inst: FPCamera, e: KeyboardEvent) {
@@ -75,8 +81,20 @@ export class FPCamera {
 		if (e.key == 'd') inst.inputs[2] = false;
 		if (e.key == 'f') inst.inputs[1] = false;
 		if (e.key == 's') inst.inputs[3] = false;
-		if (e.key == 'r') inst.inputs[5] = false;
-		if (e.key == 'w') inst.inputs[4] = false;
+		if (e.key == 'r') inst.inputs[4] = false;
+		if (e.key == 'w') inst.inputs[5] = false;
+	}
+
+	screen_to_ray(x: number, y: number, sx: number, sy: number): Ray {
+		const horizontal_coefficient = (x - sx / 2) / sx;
+		const vertical_coefficient = (y - sy / 2) / -sy;
+
+		let ray_direction = vec3.create();
+		vec3.add(ray_direction, ray_direction, this.forward);
+		vec3.add(ray_direction, ray_direction, vec3.scale(vec3.create(), this.right, horizontal_coefficient));
+		vec3.add(ray_direction, ray_direction, vec3.scale(vec3.create(), this.up, vertical_coefficient));
+
+		return new Ray(this.position, ray_direction);
 	}
 }
 
