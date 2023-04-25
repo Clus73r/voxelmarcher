@@ -1,5 +1,6 @@
 import { Scene } from "./scene";
 import ray_trace_kernel from "./shaders/ray_trace_kernel.wgsl"
+import path_trace_kernel from "./shaders/path_trace_kernel.wgsl"
 import screen_shader from "./shaders/screen_shader.wgsl"
 import { mat3 } from "gl-matrix";
 
@@ -65,7 +66,7 @@ export class Renderer {
 			maxAnisotropy: 1,
 		});
 		this.sceneParameters = this.device?.createBuffer({
-			size: 64,
+			size: 80,
 			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
 		})
 		const scene_size = this.scene.voxel_count * this.scene.voxel_count * this.scene.voxel_count;
@@ -128,7 +129,7 @@ export class Renderer {
 				layout: ray_tracing_pipline_layout,
 				compute: {
 					entryPoint: "main",
-					module: this.device.createShaderModule({ code: ray_trace_kernel }),
+					module: this.device.createShaderModule({ code: path_trace_kernel }),
 					constants: {
 						grid_size: this.scene.grid_size,
 						voxel_count: this.scene.voxel_count,
@@ -197,7 +198,11 @@ export class Renderer {
 					this.scene.camera.up[1],
 					this.scene.camera.up[2],
 					0.0,
-				]), 0, 16);
+					this.scene.direct_light[0],
+					this.scene.direct_light[1],
+					this.scene.direct_light[2],
+					this.scene.direct_light_brightness,
+				]), 0, 20);
 
 		const scene_data = new Float32Array(8 * this.scene.grid.length);
 		for (let i = 0; i < this.scene.grid.length; ++i) {

@@ -6,7 +6,7 @@ import { Scene, Voxel } from "./scene";
 
 const canvas = <HTMLCanvasElement>document.getElementById("canv");
 const fps = <HTMLParagraphElement>document.getElementById("fps");
-let camera = new FPCamera([-8.0, 0.0, 0.0], 0.0, 0.0);
+let camera = new FPCamera([-8.0, 0.0, 0.0], 0.0, 50.0);
 const scene = new Scene(camera);
 const renderer = new Renderer(canvas, scene);
 

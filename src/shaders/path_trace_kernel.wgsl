@@ -10,7 +10,7 @@ var<private> boundary_max: vec3<f32> = vec3<f32>(f32(grid_size) / 2, f32(grid_si
 var<private> depth_clip_min: f32 = 1f;
 var<private> depth_clip_max: f32 = 10f;
 
-const reflection_bounces: i32 = 5;
+const reflection_bounces: i32 = 1;
 
 struct Ray {
     origin: vec3<f32>,
@@ -79,8 +79,9 @@ fn voxel_ray_color(ray: Ray) -> ColorRay {
 		if (!voxel_ray_any(Ray(hit.position, scene.direct_light, 1 / scene.direct_light), 0.00001, &direct_light_hit)){
 			lightness = 1.0;
 		} else {
-			lightness = 0.1;
+			lightness = 0.3;
 		}
+		color_ray.color *= lightness;
 		var last_ray: Ray = ray;
 		var reflection_hits = array<vec2<f32>, reflection_bounces>();
 		for (var i = 0; i < reflection_bounces; i++) {
@@ -115,46 +116,20 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
     	let ray_entry = ray.origin + ray.direction * tmin;
 	let ray_exit = ray.origin + ray.direction * tmax;
 
-	var voxel: vec3<i32> = vec3<i32>(
-		max(0, min(voxel_count - 1, i32((ray_entry[0] - boundary_min[0]) / f32(voxel_size)))),
-		max(0, min(voxel_count - 1, i32((ray_entry[1] - boundary_min[1]) / f32(voxel_size)))),
-		max(0, min(voxel_count - 1, i32((ray_entry[2] - boundary_min[2]) / f32(voxel_size)))));
-	var voxel_upper_edge: vec3<i32> = vec3<i32>(
-		voxel[0] + 1,
-		voxel[1] + 1,
-		voxel[2] + 1,
-	);
+	var voxel: vec3<i32> = max(vec3<i32>(0), min(vec3<i32>(voxel_count - 1), vec3<i32>((ray_entry - boundary_min) / f32(voxel_size))));
+	//var end_voxel: vec3<i32> = max(vec3<i32>(0), min(vec3<i32>(voxel_count - 1), vec3<i32>((ray_exit - boundary_min - ray.direction * 0.000001) / f32(voxel_size))));
 
-	var tmax_comp: vec3<f32> = vec3<f32>(0, 0, 0);
-	var tdelta: vec3<f32> = vec3<f32>(0, 0, 0);
-	var step: vec3<i32> = vec3<i32>(0, 0, 0);
+	let direction_zeros: vec3<bool> = ray.direction == vec3<f32>(0);
+	let step: vec3<i32> = vec3<i32>(sign(ray.direction));
+	let tdelta: vec3<f32> = select(voxel_size / abs(ray.direction), vec3<f32>(tmax), direction_zeros);
+	let voxel_boundary: vec3<f32> = vec3<f32>(voxel + max(vec3<i32>(0), step)) * voxel_size;
+	var tmax_comp: vec3<f32> = select(tmin + (boundary_min + voxel_boundary - ray_entry) / ray.direction, vec3<f32>(tmax), direction_zeros);
 	var thit: f32 = tmin;
 	var hit_normal: vec3<f32> = vec3<f32>(0, 0, 0);
 
-	for (var d: i32 = 0; d < 3; d++){
-		if (ray.direction[d] > 0.0){
-			step[d] = 1;
-			tdelta[d] = voxel_size / ray.direction[d];
-			tmax_comp[d] = tmin + (boundary_min[d] + f32(voxel_upper_edge[d]) * voxel_size - ray_entry[d]) / ray.direction[d];
-
-		} else if (ray.direction[d] < 0.0){
-			step[d] = -1;
-			tdelta[d] = voxel_size / (-ray.direction[d]);
-			tmax_comp[d] = tmin + (boundary_min[d] + f32(voxel[d]) * voxel_size - ray_entry[d]) / ray.direction[d];
-		} else {
-			step[d] = 0;
-			tdelta[d] = tmax;
-			tmax_comp[d] = tmax;
-		}
-	}
-	
-	while(
-		voxel.x >= 0 && voxel.x < voxel_count &&
-		voxel.y >= 0 && voxel.y < voxel_count &&
-		voxel.z >= 0 && voxel.z < voxel_count
-	) {
+	while(all(voxel >= vec3<i32>(0)) && all(voxel < vec3<i32>(voxel_count))) {
 		let hit_voxel = get_voxel(voxel);
-		if (hit_voxel.opacity > 0.01 && tmax_comp.x > start_tolerance && tmax_comp.y > start_tolerance && tmax_comp.z > start_tolerance){
+		if (hit_voxel.opacity > 0.01 && all(tmax_comp > vec3<f32>(start_tolerance))){
 			(*hit).position = ray.origin + ray.direction * thit;
 			(*hit).voxel = hit_voxel;
 			(*hit).voxel_position = voxel;

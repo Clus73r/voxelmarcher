@@ -42,7 +42,6 @@ export class FPCamera {
 
 		vec3.normalize(movement_vec, movement_vec);
 		vec3.add(this.position, this.position, vec3.scale(vec3.create(), movement_vec, this.speed * deltaTime))
-		// console.log(this.position);
 	}
 
 	update() {
@@ -51,18 +50,14 @@ export class FPCamera {
 			Math.sin(Deg2Rad(this.eulers[2])) * Math.cos(Deg2Rad(this.eulers[1])),
 			Math.sin(Deg2Rad(this.eulers[1]))
 		]
-		vec3.cross(this.right, this.forward, [0, 0, 1]);
-		vec3.cross(this.up, this.right, this.forward);
+		vec3.normalize(this.right, vec3.cross(this.right, this.forward, [0, 0, 1]));
+		vec3.normalize(this.up, vec3.cross(this.up, this.right, this.forward));
 		var target: vec3 = vec3.create();
 		vec3.add(target, this.position, this.forward);
-
-		// this.forward = [1, 0, 0];
-		// this.right = [0, 1, 0];
-		// this.up = [0, 0, 1];
 	}
 
 	mouse_move(inst: FPCamera, e: MouseEvent) {
-		inst.eulers[1] = (inst.eulers[1] - e.movementY) % 360;
+		inst.eulers[1] = Math.min(90, Math.max(-90, inst.eulers[1] - e.movementY));
 		inst.eulers[2] = (inst.eulers[2] - e.movementX) % 360;
 		inst.update();
 	}
