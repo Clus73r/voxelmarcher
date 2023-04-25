@@ -18,9 +18,14 @@ struct Ray {
 
 struct RayHit {
 	position: vec3<f32>,
+	depth: f32,
 	voxel_position: vec3<i32>,
 	voxel: Voxel,
-	depth: f32,
+	normal: vec3<f32>,
+}
+
+struct ColorRay {
+	color: vec3<f32>,
 }
 
 struct SceneParameter {
@@ -33,6 +38,7 @@ struct SceneParameter {
 struct Voxel {
 	color: vec3<f32>,
 	opacity: f32,
+	roughness: f32,
 }
 
 struct SceneData {
@@ -56,13 +62,38 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     var pixel_color : vec3<f32> = vec3<f32>(0.2, 0.2, 0.4);
     /* pixel_color += 0.8; */
 
-    var hit: RayHit;
-    if (voxel_ray_any(ray, &hit)){
+    /* var hit: RayHit; */
+    /* if (voxel_ray_any(ray, &hit)){} */
 	    /* pixel_color = vec3<f32>(hit.voxel_position) / f32(voxel_count); */
 	    /* pixel_color = hit.voxel.color + vec3<f32>(hit.voxel_position) / f32(voxel_count) / 2; */
-	    pixel_color = hit.voxel.color;
-    }
+	    /* pixel_color = hit.voxel.color; */
+	    /*     	    pixel_color = hit.normal; */
+
+	pixel_color = voxel_ray_color(ray).color;
+
     textureStore(color_buffer, screen_pos, vec4<f32>(pixel_color, 1.0));
+}
+
+fn voxel_ray_color(ray: Ray) -> ColorRay {
+	var hit: RayHit;
+	var color_ray: ColorRay;
+
+	if (voxel_ray_any(ray, &hit)){
+		color_ray.color = hit.voxel.color;
+		/* if (hit.normal.x == 0.0 && hit.normal.y == 0.0 && hit.normal.z == 0.0){ */
+		/* 	color_ray.color = vec3<f32>(0.0); */
+		/* 	return color_ray; */
+		/* } */
+		let reflected = ray_reflect(ray, hit.position + hit.normal, hit.normal);
+		let reflect_roughness = hit.voxel.roughness;
+		if (voxel_ray_any(reflected, &hit)){
+			color_ray.color = color_ray.color * reflect_roughness + hit.voxel.color * (1 - reflect_roughness);
+		}
+	} else {
+		color_ray.color = ray.direction / 16;
+	}
+
+	return color_ray;
 }
 
 fn voxel_ray_any(ray: Ray, hit: ptr<function, RayHit>) -> bool {
@@ -93,7 +124,7 @@ fn voxel_ray_any(ray: Ray, hit: ptr<function, RayHit>) -> bool {
 	var tdelta: vec3<f32> = vec3<f32>(0, 0, 0);
 	var step: vec3<i32> = vec3<i32>(0, 0, 0);
 	var thit: f32 = tmin;
-	/* let next_voxel: vec3<i32> = voxel + step; */
+	var hit_normal: vec3<f32> = vec3<f32>(0, 0, 0);
 
 	for (var d: i32 = 0; d < 3; d++){
 		if (ray.direction[d] > 0.0){
@@ -123,6 +154,7 @@ fn voxel_ray_any(ray: Ray, hit: ptr<function, RayHit>) -> bool {
 			(*hit).voxel = hit_voxel;
 			(*hit).voxel_position = voxel;
 			(*hit).depth = 1 - (thit - depth_clip_min) / (depth_clip_max - depth_clip_min);
+			(*hit).normal = hit_normal;
 			return true;
 		}
 
@@ -130,18 +162,26 @@ fn voxel_ray_any(ray: Ray, hit: ptr<function, RayHit>) -> bool {
 			voxel.x += step.x;
 			thit = tmax_comp.x;
 			tmax_comp.x += tdelta.x;
+			hit_normal = vec3<f32>(f32(-step.x), 0, 0);
 		} else if (tmax_comp.y < tmax_comp.z){
 			voxel.y += step.y;
 			thit = tmax_comp.y;
 			tmax_comp.y += tdelta.y;
+			hit_normal = vec3<f32>(0, f32(-step.y), 0);
 		} else {
 			voxel.z += step.z;
 			thit = tmax_comp.z;
 			tmax_comp.z += tdelta.z;
+			hit_normal = vec3<f32>(0, 0, f32(-step.z));
 		}
 	}
 
 	return false;
+}
+
+fn ray_reflect(ray: Ray, position: vec3<f32>, normal: vec3<f32>) -> Ray {
+	let reflect = ray.direction - 2 * dot(ray.direction, normal) * normal;
+	return Ray(position, reflect, 1 / reflect);
 }
 
 fn get_voxel_id(v: vec3<i32>) -> i32 {

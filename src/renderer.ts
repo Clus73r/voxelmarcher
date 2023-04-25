@@ -70,7 +70,7 @@ export class Renderer {
 		})
 		const scene_size = this.scene.voxel_count * this.scene.voxel_count * this.scene.voxel_count;
 		this.sceneData = this.device?.createBuffer({
-			size: scene_size * 4 * 4,
+			size: scene_size * 8 * 4,
 			usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
 		})
 	}
@@ -199,16 +199,20 @@ export class Renderer {
 					0.0,
 				]), 0, 16);
 
-		const scene_data = new Float32Array(4 * this.scene.grid.length);
+		const scene_data = new Float32Array(8 * this.scene.grid.length);
 		for (let i = 0; i < this.scene.grid.length; ++i) {
-			scene_data[4 * i] = this.scene.grid[i].color[0];
-			scene_data[4 * i + 1] = this.scene.grid[i].color[1];
-			scene_data[4 * i + 2] = this.scene.grid[i].color[2];
-			scene_data[4 * i + 3] = this.scene.grid[i].opacity;
+			scene_data[8 * i] = this.scene.grid[i].color[0];
+			scene_data[8 * i + 1] = this.scene.grid[i].color[1];
+			scene_data[8 * i + 2] = this.scene.grid[i].color[2];
+			scene_data[8 * i + 3] = this.scene.grid[i].opacity;
+			scene_data[8 * i + 4] = this.scene.grid[i].roughness;
+			scene_data[8 * i + 5] = 0;
+			scene_data[8 * i + 6] = 0;
+			scene_data[8 * i + 7] = 0;
 		}
 
 		this.device?.queue.writeBuffer(
-			<GPUBuffer>this.sceneData, 0, scene_data, 0, this.scene.grid.length * 4
+			<GPUBuffer>this.sceneData, 0, scene_data, 0, this.scene.grid.length * 8
 		);
 
 		const commandEncoder = this.device?.createCommandEncoder();

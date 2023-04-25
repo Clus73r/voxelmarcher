@@ -33,6 +33,7 @@ export class RayHit {
 export class Voxel {
 	color: vec3 = vec3.create();
 	opacity: number = 0.0;
+	roughness: number = 1.0;
 }
 
 export class Scene {
@@ -40,7 +41,7 @@ export class Scene {
 	grid: Voxel[];
 	boundary_min: vec3;
 	boundary_max: vec3;
-	grid_size: number = 64;
+	grid_size: number = 8;
 	voxel_count: number = 16;
 	voxel_size: number;
 
@@ -70,6 +71,12 @@ export class Scene {
 					if (z < 1 || z < y) {
 						voxel.opacity = 1;
 						voxel.color = [x / 16, y / 16, z / 16];
+						voxel.roughness = 1.0;
+					}
+					if (z > 14) {
+						voxel.opacity = 1;
+						voxel.color = [0.5, 0.2, x / 16];
+						voxel.roughness = y / 16;
 					}
 					this.set_voxel_comp(voxel, x, y, z);
 				}
