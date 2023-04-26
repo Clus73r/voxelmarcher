@@ -34,6 +34,7 @@ export class Voxel {
 	color: vec3 = vec3.create();
 	opacity: number = 0.0;
 	roughness: number = 1.0;
+	lightness: number = 0.0;
 }
 
 export class Scene {
@@ -63,7 +64,7 @@ export class Scene {
 		this.voxel_size = this.grid_size / this.voxel_count;
 		this.initialize_grid();
 		this.direct_light = vec3.normalize(vec3.create(), [1.5, 0.6, 1]);
-		this.direct_light_brightness = 1.0;
+		this.direct_light_brightness = 0.5;
 	}
 
 	initialize_grid() {
@@ -72,22 +73,25 @@ export class Scene {
 			for (let y = 0; y < this.voxel_count; y++) {
 				for (let z = 0; z < this.voxel_count; z++) {
 					let voxel = new Voxel();
-					if (z < 1){
+					if (z < 1) {
 						voxel.opacity = 1;
-						voxel.color = [0.7, 0.6, x / 16];
+						voxel.color = [0.8, 0.2, 0.3];
+						voxel.lightness = 2;
 						voxel.roughness = y / 16;
 					}
 					if (z > 14) {
 						voxel.opacity = 1;
-						voxel.color = [0.5, 0.2, x / 16];
+						voxel.color = [0.2, 0.8, 0.7];
 						voxel.roughness = 1;
+						voxel.lightness = 2;
 					}
-					if (vec3.dist([x, y, 0], [this.voxel_count / 2, this.voxel_count / 2, 0]) < 4){
+					if (vec3.dist([x, y, 0], [this.voxel_count / 2, this.voxel_count / 2, 0]) < 4) {
 						voxel.opacity = 1;
-						voxel.color = [x / 16, y / 16, z / 16];
-						//voxel.color = [0.8, 0.9, 1.0];
+						// voxel.color = [x / 16, y / 16, z / 16];
+						voxel.color = [0.8, 0.8, 0.8];
 						voxel.roughness = 1;
 					}
+					// voxel.color = [0.8, 0.8, 0.8];
 					this.set_voxel_comp(voxel, x, y, z);
 				}
 			}

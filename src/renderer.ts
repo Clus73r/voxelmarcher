@@ -203,6 +203,7 @@ export class Renderer {
 					this.scene.direct_light[2],
 					this.scene.direct_light_brightness,
 				]), 0, 20);
+
 		const scene_data = new Float32Array(8 * this.scene.grid.length);
 		for (let i = 0; i < this.scene.grid.length; ++i) {
 			scene_data[8 * i] = this.scene.grid[i].color[0];
@@ -210,7 +211,7 @@ export class Renderer {
 			scene_data[8 * i + 2] = this.scene.grid[i].color[2];
 			scene_data[8 * i + 3] = this.scene.grid[i].opacity;
 			scene_data[8 * i + 4] = this.scene.grid[i].roughness;
-			scene_data[8 * i + 5] = 0;
+			scene_data[8 * i + 5] = this.scene.grid[i].lightness;
 			scene_data[8 * i + 6] = 0;
 			scene_data[8 * i + 7] = 0;
 		}
@@ -225,8 +226,8 @@ export class Renderer {
 		ray_trace_pass?.setPipeline(<GPUComputePipeline>this.ray_tracing_pipeline);
 		ray_trace_pass?.setBindGroup(0, <GPUBindGroup>this.ray_tracing_bind_group);
 		ray_trace_pass?.dispatchWorkgroups(
-			this.canvas.width / 4,
-			this.canvas.height / 4,
+			this.canvas.width / 16,
+			this.canvas.height / 16,
 			1
 		); // hier noch die workgroups anpassen
 		ray_trace_pass?.end();

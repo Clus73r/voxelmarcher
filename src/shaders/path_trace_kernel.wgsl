@@ -10,12 +10,15 @@ var<private> boundary_max: vec3<f32> = vec3<f32>(f32(grid_size) / 2, f32(grid_si
 var<private> depth_clip_min: f32 = 1f;
 var<private> depth_clip_max: f32 = 10f;
 
+const samples: i32 = 500;
 const reflection_bounces: i32 = 1;
-const light_bounces: i32 = 3;
+const light_bounces: i32 = 2;
+const scatter: i32 = 5;
 const ambient_light: f32 = 0.03;
 const ao: f32 = 0.2;
 
 var<private> rng_seed: u32;
+var<private> rand_seed: vec2<f32>;
 
 struct Ray {
     origin: vec3<f32>,
@@ -49,47 +52,88 @@ struct Voxel {
 	color: vec3<f32>,
 	opacity: f32,
 	roughness: f32,
+	lightness: f32,
 }
 
 struct SceneData {
 	data: array<Voxel>,
 }
 
-@compute @workgroup_size(4,4,1)
+@compute @workgroup_size(16,16,1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
-	rng_seed = GlobalInvocationID.x + GlobalInvocationID.y * u32(scene.rng_start);
     let screen_size: vec2<u32> = textureDimensions(color_buffer);
     let screen_pos : vec2<i32> = vec2<i32>(i32(GlobalInvocationID.x), i32(GlobalInvocationID.y));
+    rng_seed = GlobalInvocationID.x + GlobalInvocationID.y * 1000;
+    /* rng_seed = GlobalInvocationID.x + GlobalInvocationID.y * u32(scene.rng_start); */
+    init_rand(GlobalInvocationID.x, vec4<f32>(0.454, -0.789, 0.456, -0.45));
 
-    let horizontal_coefficient: f32 = (f32(screen_pos.x) - f32(screen_size.x) / 2) / f32(screen_size.x);
-    let vertical_coefficient: f32 = (f32(screen_pos.y) - f32(screen_size.y) / 2) / -f32(screen_size.y);
+    var pixel_color: vec3<f32>;
+    for (var i = 0; i < samples; i++){
 
-    let ray_direction = normalize(scene.camera_forward
-	+ horizontal_coefficient * scene.camera_right
-	+ vertical_coefficient * scene.camera_up);
-    let ray: Ray = Ray(scene.camera_pos, ray_direction, 1 / ray_direction);
+	    let horizontal_coefficient: f32 = (f32(screen_pos.x) + rand() - 0.5 - f32(screen_size.x) / 2) / f32(screen_size.x);
+	    let vertical_coefficient: f32 = (f32(screen_pos.y) + rand() - 0.5 - f32(screen_size.y) / 2) / -f32(screen_size.y);
 
-    var pixel_color = trace(ray).color;
-    //pixel_color = vec3<f32>(rng());
+	    let ray_direction = normalize(scene.camera_forward
+			    + horizontal_coefficient * scene.camera_right
+			    + vertical_coefficient * scene.camera_up);
+	    let ray: Ray = Ray(scene.camera_pos, ray_direction, 1 / ray_direction);
+	    pixel_color += trace(ray, light_bounces);
+    }
+    /* pixel_color /= f32(samples); */
+
+    let correction = 1.0 / f32(samples);
+    pixel_color = sqrt(correction * pixel_color);
+
+    /* pixel_color = random_unit_vector(); */
 
     textureStore(color_buffer, screen_pos, vec4<f32>(pixel_color, 1.0));
 }
 
-fn trace(ray: Ray) -> ColorRay {
+fn trace(ray: Ray, depth: i32) -> vec3<f32> {
+	if (depth <= 0) {
+		return vec3<f32>(0);
+	}
 	var accum: vec3<f32> = vec3<f32>(0.0);
 	var mask: vec3<f32> = vec3<f32>(1.0);
 	var curr_ray: Ray = ray;
 	var curr_hit: RayHit;
 	var refl: f32 = 1.0;
-	//for (var i = 0; i < light_bounces; i++){
-	if (voxel_ray_any(curr_ray, 0.0001, &curr_hit)) {
-		let illum = direct_illumination(curr_hit, &refl);
-		accum += mask * illum;
-		mask *= refl;
-		return ColorRay(illum);
-	} else {
-		return ColorRay(ray.direction);
+
+	var bounce_results: array<RayHit, light_bounces>;
+
+	for (var i = 0; i < light_bounces; i++){
+		if (voxel_ray_any(curr_ray, 0.0001, &curr_hit)) {
+			let bounce_direction = random_unit_vector() + curr_hit.normal;
+			if (all(bounce_direction == vec3<f32>(0))){
+				curr_ray = Ray(curr_hit.position, curr_hit.normal, 1 / curr_hit.normal);
+			} else {
+				curr_ray = Ray(curr_hit.position, bounce_direction, 1 / bounce_direction);
+			}
+			bounce_results[i] = curr_hit;
+		}
 	}
+	accum = vec3<f32>(0.2, 0.2, 0.2);
+	for (var i: i32 = light_bounces; i >= 0; i--){
+		if (all(bounce_results[i].normal == vec3<f32>(0))){
+			continue;
+		}
+		/* accum = direct_illumination(bounce_results[i], &refl) * accum + bounce_results[i].voxel.lightness * bounce_results[i].voxel.color; */
+		accum = bounce_results[i].voxel.color * accum + bounce_results[i].voxel.lightness * bounce_results[i].voxel.color;
+	}
+	return accum;
+
+	/* let illum = direct_illumination(curr_hit, &refl); */
+
+
+			/*  */
+			/* for (var scatter_i = 0; scatter_i < scatter; scatter_i++){ */
+			/* 	let bounce_direction = random_unit_vector() + curr_hit.normal; */
+			/* 	let bounce_ray = Ray(curr_hit.position, bounce_direction, 1 / bounce_direction); */
+			/* 	if (voxel_ray_any(bounce_ray, 0.0001, &curr_hit)){ */
+			/* 		illum += direct_illumination(curr_hit, &refl); */
+			/* 	} */
+			/* } */
+			/* return illum / f32(scatter); */
 
 	//return ColorRay(curr_hit.position);
 	//}
@@ -100,7 +144,7 @@ fn direct_illumination(orig_hit: RayHit, refl: ptr<function, f32>) -> vec3<f32> 
 	if (!voxel_ray_any(Ray(orig_hit.position, scene.direct_light, 1 / scene.direct_light), 0.00001, &hit)){
 		return scene.direct_light_brightness * orig_hit.voxel.color;
 	} else {
-		return 0.2 * hit.voxel.color;
+		return 0.2 * orig_hit.voxel.color;
 	}
 	//Refl
 }
@@ -180,6 +224,7 @@ fn get_voxel_id(v: vec3<i32>) -> i32 {
 fn get_voxel(v: vec3<i32>) -> Voxel {
 	return scene_data.data[v.z * voxel_count * voxel_count + v.y * voxel_count + v.x];
 }
+
  fn rng() -> f32 {
 	var z = rng_seed + 0x9e3779b9;
 	rng_seed++;
@@ -190,3 +235,19 @@ fn get_voxel(v: vec3<i32>) -> Voxel {
 	z ^= (z >> 16);
 	return bitcast<f32>((z >> 9) | 0x3f800000) - 1.0;
  }
+
+fn random_unit_vector() -> vec3<f32> {
+	return normalize(vec3<f32>(rand() - 0.5, rand() - 0.5, rand() - 0.5));
+}
+
+fn init_rand(invocation_id : u32, seed : vec4<f32>) {
+	rand_seed = seed.xz;
+	rand_seed = fract(rand_seed * cos(35.456+f32(invocation_id) * seed.yw));
+	rand_seed = fract(rand_seed * cos(41.235+f32(invocation_id) * seed.xw));
+}
+
+fn rand() -> f32 {
+	rand_seed.x = fract(cos(dot(rand_seed, vec2<f32>(23.14077926, 232.61690225))) * 136.8168);
+	rand_seed.y = fract(cos(dot(rand_seed, vec2<f32>(54.47856553, 345.84153136))) * 534.7645);
+	return rand_seed.y;
+}
