@@ -11,6 +11,11 @@ var<private> depth_clip_min: f32 = 1f;
 var<private> depth_clip_max: f32 = 10f;
 
 const reflection_bounces: i32 = 1;
+const light_bounces: i32 = 3;
+const ambient_light: f32 = 0.03;
+const ao: f32 = 0.2;
+
+var<private> rng_seed: u32;
 
 struct Ray {
     origin: vec3<f32>,
@@ -32,6 +37,7 @@ struct ColorRay {
 
 struct SceneParameter {
     camera_pos: vec3<f32>,
+    rng_start: f32,
     camera_forward: vec3<f32>,
     camera_right: vec3<f32>,
     camera_up: vec3<f32>,
@@ -51,6 +57,7 @@ struct SceneData {
 
 @compute @workgroup_size(4,4,1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
+	rng_seed = GlobalInvocationID.x + GlobalInvocationID.y * u32(scene.rng_start);
     let screen_size: vec2<u32> = textureDimensions(color_buffer);
     let screen_pos : vec2<i32> = vec2<i32>(i32(GlobalInvocationID.x), i32(GlobalInvocationID.y));
 
@@ -62,44 +69,46 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 	+ vertical_coefficient * scene.camera_up);
     let ray: Ray = Ray(scene.camera_pos, ray_direction, 1 / ray_direction);
 
-    var pixel_color : vec3<f32> = vec3<f32>(0.2, 0.2, 0.4);
-    pixel_color = voxel_ray_color(ray).color;
+    var pixel_color = trace(ray).color;
+    //pixel_color = vec3<f32>(rng());
 
     textureStore(color_buffer, screen_pos, vec4<f32>(pixel_color, 1.0));
 }
 
-fn voxel_ray_color(ray: Ray) -> ColorRay {
-	var hit: RayHit;
-	var color_ray: ColorRay;
-	var lightness: f32;
-
-	if (voxel_ray_any(ray, 0.0, &hit)){
-		color_ray.color = hit.voxel.color;
-		var direct_light_hit = RayHit();
-		if (!voxel_ray_any(Ray(hit.position, scene.direct_light, 1 / scene.direct_light), 0.00001, &direct_light_hit)){
-			lightness = 1.0;
-		} else {
-			lightness = 0.3;
-		}
-		color_ray.color *= lightness;
-		var last_ray: Ray = ray;
-		var reflection_hits = array<vec2<f32>, reflection_bounces>();
-		for (var i = 0; i < reflection_bounces; i++) {
-			let reflected = ray_reflect(last_ray, hit.position, hit.normal); // 2. PARAMETER ??
-			let reflect_roughness = hit.voxel.roughness;
-			if (voxel_ray_any(reflected, 0.00001, &hit)){
-				color_ray.color = color_ray.color * reflect_roughness + hit.voxel.color * (1 - reflect_roughness);
-			} else {
-				break;
-			}
-			last_ray = reflected;
-		}
+fn trace(ray: Ray) -> ColorRay {
+	var accum: vec3<f32> = vec3<f32>(0.0);
+	var mask: vec3<f32> = vec3<f32>(1.0);
+	var curr_ray: Ray = ray;
+	var curr_hit: RayHit;
+	var refl: f32 = 1.0;
+	//for (var i = 0; i < light_bounces; i++){
+	if (voxel_ray_any(curr_ray, 0.0001, &curr_hit)) {
+		let illum = direct_illumination(curr_hit, &refl);
+		accum += mask * illum;
+		mask *= refl;
+		return ColorRay(illum);
 	} else {
-		color_ray.color = ray.direction / 16;
+		return ColorRay(ray.direction);
 	}
 
-	return color_ray;
+	//return ColorRay(curr_hit.position);
+	//}
 }
+
+fn direct_illumination(orig_hit: RayHit, refl: ptr<function, f32>) -> vec3<f32> {
+	var hit: RayHit;
+	if (!voxel_ray_any(Ray(orig_hit.position, scene.direct_light, 1 / scene.direct_light), 0.00001, &hit)){
+		return scene.direct_light_brightness * orig_hit.voxel.color;
+	} else {
+		return 0.2 * hit.voxel.color;
+	}
+	//Refl
+}
+
+//fn pbr(hit: RayHit, ray: Ray) -> vec3<f32> {
+//	let ambient_color = vec3<f32>(ambient_light) * hit.voxel.color * (1.0 - ao);
+//	let f0 = vec3<f32>(0.04); //dielectric
+//}
 
 fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> bool {
 	var tmin: f32 = 0.0;
@@ -171,3 +180,13 @@ fn get_voxel_id(v: vec3<i32>) -> i32 {
 fn get_voxel(v: vec3<i32>) -> Voxel {
 	return scene_data.data[v.z * voxel_count * voxel_count + v.y * voxel_count + v.x];
 }
+ fn rng() -> f32 {
+	var z = rng_seed + 0x9e3779b9;
+	rng_seed++;
+	z ^= z >> 15;
+	z *= 0x853bca6b;
+	z ^= z >> 13;
+	z *= 0xc2b2ae35;
+	z ^= (z >> 16);
+	return bitcast<f32>((z >> 9) | 0x3f800000) - 1.0;
+ }

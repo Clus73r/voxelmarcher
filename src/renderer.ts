@@ -185,7 +185,7 @@ export class Renderer {
 					this.scene.camera.position[0],
 					this.scene.camera.position[1],
 					this.scene.camera.position[2],
-					0.0,
+					new Date().getMilliseconds(),
 					this.scene.camera.forward[0],
 					this.scene.camera.forward[1],
 					this.scene.camera.forward[2],
@@ -203,7 +203,6 @@ export class Renderer {
 					this.scene.direct_light[2],
 					this.scene.direct_light_brightness,
 				]), 0, 20);
-
 		const scene_data = new Float32Array(8 * this.scene.grid.length);
 		for (let i = 0; i < this.scene.grid.length; ++i) {
 			scene_data[8 * i] = this.scene.grid[i].color[0];

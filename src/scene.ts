@@ -72,11 +72,6 @@ export class Scene {
 			for (let y = 0; y < this.voxel_count; y++) {
 				for (let z = 0; z < this.voxel_count; z++) {
 					let voxel = new Voxel();
-					// if (z < 1 || z < y) {
-					// 	voxel.opacity = 1;
-					// 	voxel.color = [x / 16, y / 16, z / 16];
-					// 	voxel.roughness = 0.5;
-					// }
 					if (z < 1){
 						voxel.opacity = 1;
 						voxel.color = [0.7, 0.6, x / 16];
@@ -87,9 +82,10 @@ export class Scene {
 						voxel.color = [0.5, 0.2, x / 16];
 						voxel.roughness = 1;
 					}
-					if (vec3.dist([x, y, z], [this.voxel_count / 2, this.voxel_count / 2, this.voxel_count / 2]) < 4){
+					if (vec3.dist([x, y, 0], [this.voxel_count / 2, this.voxel_count / 2, 0]) < 4){
 						voxel.opacity = 1;
 						voxel.color = [x / 16, y / 16, z / 16];
+						//voxel.color = [0.8, 0.9, 1.0];
 						voxel.roughness = 1;
 					}
 					this.set_voxel_comp(voxel, x, y, z);
