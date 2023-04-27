@@ -10,8 +10,8 @@ var<private> boundary_max: vec3<f32> = vec3<f32>(f32(grid_size) / 2, f32(grid_si
 var<private> depth_clip_min: f32 = 1f;
 var<private> depth_clip_max: f32 = 10f;
 
-const samples: i32 = 10;
-const reflection_bounces: i32 = 5;
+const samples: i32 = 100;
+const reflection_bounces: i32 = 2;
 
 var<private> rng_seed: u32;
 var<private> rand_seed: vec2<f32>;
@@ -61,17 +61,23 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     /* rng_seed = GlobalInvocationID.x + GlobalInvocationID.y * u32(scene.rng_start); */
     init_rand(GlobalInvocationID.x, vec4<f32>(0.454, -0.789, 0.456, -0.45));
 
-    let horizontal_coefficient: f32 = (f32(screen_pos.x) - f32(screen_size.x) / 2) / f32(screen_size.x);
-    let vertical_coefficient: f32 = (f32(screen_pos.y) - f32(screen_size.y) / 2) / -f32(screen_size.y);
+    var pixel_color: vec3<f32>;
+    for (var i = 0; i < samples; i++){
 
-    let ray_direction = normalize(scene.camera_forward
-	+ horizontal_coefficient * scene.camera_right
-	+ vertical_coefficient * scene.camera_up);
-    let ray: Ray = Ray(scene.camera_pos, ray_direction, 1 / ray_direction);
+	    let horizontal_coefficient: f32 = (f32(screen_pos.x) + rand() - 0.5 - f32(screen_size.x) / 2) / f32(screen_size.x);
+	    let vertical_coefficient: f32 = (f32(screen_pos.y) + rand() - 0.5 - f32(screen_size.y) / 2) / -f32(screen_size.y);
 
-    var pixel_color : vec3<f32> = vec3<f32>(0.2, 0.2, 0.4);
+	    let ray_direction = normalize(scene.camera_forward
+			    + horizontal_coefficient * scene.camera_right
+			    + vertical_coefficient * scene.camera_up);
+	    let ray: Ray = Ray(scene.camera_pos, ray_direction, 1 / ray_direction);
+	    pixel_color += trace(ray);
+    }
+    pixel_color /= f32(samples);
+
+    // var pixel_color : vec3<f32> = vec3<f32>(0.2, 0.2, 0.4);
     // pixel_color = voxel_ray_color(ray).color;
-    pixel_color = trace(ray);
+    // pixel_color = trace(ray);
 
     textureStore(color_buffer, screen_pos, vec4<f32>(pixel_color, 1.0));
 }

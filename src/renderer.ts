@@ -129,7 +129,7 @@ export class Renderer {
 				layout: ray_tracing_pipline_layout,
 				compute: {
 					entryPoint: "main",
-					module: this.device.createShaderModule({ code: ray_trace_kernel }),
+					module: this.device.createShaderModule({ code: path_trace_kernel }),
 					constants: {
 						grid_size: this.scene.grid_size,
 						voxel_count: this.scene.voxel_count,
