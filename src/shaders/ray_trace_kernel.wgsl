@@ -10,7 +10,11 @@ var<private> boundary_max: vec3<f32> = vec3<f32>(f32(grid_size) / 2, f32(grid_si
 var<private> depth_clip_min: f32 = 1f;
 var<private> depth_clip_max: f32 = 10f;
 
+const samples: i32 = 10;
 const reflection_bounces: i32 = 5;
+
+var<private> rng_seed: u32;
+var<private> rand_seed: vec2<f32>;
 
 struct Ray {
     origin: vec3<f32>,
@@ -49,10 +53,13 @@ struct SceneData {
 	data: array<Voxel>,
 }
 
-@compute @workgroup_size(4,4,1)
+@compute @workgroup_size(16,16,1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let screen_size: vec2<u32> = textureDimensions(color_buffer);
     let screen_pos : vec2<i32> = vec2<i32>(i32(GlobalInvocationID.x), i32(GlobalInvocationID.y));
+    rng_seed = GlobalInvocationID.x + GlobalInvocationID.y * 1000;
+    /* rng_seed = GlobalInvocationID.x + GlobalInvocationID.y * u32(scene.rng_start); */
+    init_rand(GlobalInvocationID.x, vec4<f32>(0.454, -0.789, 0.456, -0.45));
 
     let horizontal_coefficient: f32 = (f32(screen_pos.x) - f32(screen_size.x) / 2) / f32(screen_size.x);
     let vertical_coefficient: f32 = (f32(screen_pos.y) - f32(screen_size.y) / 2) / -f32(screen_size.y);
@@ -63,9 +70,43 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let ray: Ray = Ray(scene.camera_pos, ray_direction, 1 / ray_direction);
 
     var pixel_color : vec3<f32> = vec3<f32>(0.2, 0.2, 0.4);
-    pixel_color = voxel_ray_color(ray).color;
+    // pixel_color = voxel_ray_color(ray).color;
+    pixel_color = trace(ray);
 
     textureStore(color_buffer, screen_pos, vec4<f32>(pixel_color, 1.0));
+}
+
+fn trace(ray: Ray) -> vec3<f32> {
+	var hit: RayHit;
+	var bounces: array<RayHit, reflection_bounces>;
+	var curr_ray = ray;
+	var color = vec3<f32>(0.2);
+
+	for (var i = 0; i < reflection_bounces; i++){
+		if(voxel_ray_any(curr_ray, 0.001, &hit)){
+			bounces[i] = hit;
+			curr_ray = ray_reflect(curr_ray, hit.position, hit.normal);
+		}
+	}
+
+	for (var i: i32 = reflection_bounces; i >= 0; i--){
+		if (all(bounces[i].normal == vec3<f32>(0))){
+			continue;
+		}
+		let t = bounces[i].voxel.roughness;
+		//color = bounces[i].voxel.color * illumination(bounces[i].position);
+		color = color * (1 - t) + t * bounces[i].voxel.color * illumination(bounces[i].position);
+	}
+
+	return color;
+}
+
+fn illumination(p: vec3<f32>) -> f32 {
+	var hit: RayHit;
+	if (!voxel_ray_any(Ray(p, scene.direct_light, 1 / scene.direct_light), 0.001, &hit)){
+		return scene.direct_light_brightness;
+	}
+	return 0.2;
 }
 
 fn voxel_ray_color(ray: Ray) -> ColorRay {
@@ -115,46 +156,20 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
     	let ray_entry = ray.origin + ray.direction * tmin;
 	let ray_exit = ray.origin + ray.direction * tmax;
 
-	var voxel: vec3<i32> = vec3<i32>(
-		max(0, min(voxel_count - 1, i32((ray_entry[0] - boundary_min[0]) / f32(voxel_size)))),
-		max(0, min(voxel_count - 1, i32((ray_entry[1] - boundary_min[1]) / f32(voxel_size)))),
-		max(0, min(voxel_count - 1, i32((ray_entry[2] - boundary_min[2]) / f32(voxel_size)))));
-	var voxel_upper_edge: vec3<i32> = vec3<i32>(
-		voxel[0] + 1,
-		voxel[1] + 1,
-		voxel[2] + 1,
-	);
+	var voxel: vec3<i32> = max(vec3<i32>(0), min(vec3<i32>(voxel_count - 1), vec3<i32>((ray_entry - boundary_min) / f32(voxel_size))));
+	//var end_voxel: vec3<i32> = max(vec3<i32>(0), min(vec3<i32>(voxel_count - 1), vec3<i32>((ray_exit - boundary_min - ray.direction * 0.000001) / f32(voxel_size))));
 
-	var tmax_comp: vec3<f32> = vec3<f32>(0, 0, 0);
-	var tdelta: vec3<f32> = vec3<f32>(0, 0, 0);
-	var step: vec3<i32> = vec3<i32>(0, 0, 0);
+	let direction_zeros: vec3<bool> = ray.direction == vec3<f32>(0);
+	let step: vec3<i32> = vec3<i32>(sign(ray.direction));
+	let tdelta: vec3<f32> = select(voxel_size / abs(ray.direction), vec3<f32>(tmax), direction_zeros);
+	let voxel_boundary: vec3<f32> = vec3<f32>(voxel + max(vec3<i32>(0), step)) * voxel_size;
+	var tmax_comp: vec3<f32> = select(tmin + (boundary_min + voxel_boundary - ray_entry) / ray.direction, vec3<f32>(tmax), direction_zeros);
 	var thit: f32 = tmin;
 	var hit_normal: vec3<f32> = vec3<f32>(0, 0, 0);
 
-	for (var d: i32 = 0; d < 3; d++){
-		if (ray.direction[d] > 0.0){
-			step[d] = 1;
-			tdelta[d] = voxel_size / ray.direction[d];
-			tmax_comp[d] = tmin + (boundary_min[d] + f32(voxel_upper_edge[d]) * voxel_size - ray_entry[d]) / ray.direction[d];
-
-		} else if (ray.direction[d] < 0.0){
-			step[d] = -1;
-			tdelta[d] = voxel_size / (-ray.direction[d]);
-			tmax_comp[d] = tmin + (boundary_min[d] + f32(voxel[d]) * voxel_size - ray_entry[d]) / ray.direction[d];
-		} else {
-			step[d] = 0;
-			tdelta[d] = tmax;
-			tmax_comp[d] = tmax;
-		}
-	}
-	
-	while(
-		voxel.x >= 0 && voxel.x < voxel_count &&
-		voxel.y >= 0 && voxel.y < voxel_count &&
-		voxel.z >= 0 && voxel.z < voxel_count
-	) {
+	while(all(voxel >= vec3<i32>(0)) && all(voxel < vec3<i32>(voxel_count))) {
 		let hit_voxel = get_voxel(voxel);
-		if (hit_voxel.opacity > 0.01 && tmax_comp.x > start_tolerance && tmax_comp.y > start_tolerance && tmax_comp.z > start_tolerance){
+		if (hit_voxel.opacity > 0.01 && all(tmax_comp > vec3<f32>(start_tolerance))){
 			(*hit).position = ray.origin + ray.direction * thit;
 			(*hit).voxel = hit_voxel;
 			(*hit).voxel_position = voxel;
@@ -195,4 +210,16 @@ fn get_voxel_id(v: vec3<i32>) -> i32 {
 
 fn get_voxel(v: vec3<i32>) -> Voxel {
 	return scene_data.data[v.z * voxel_count * voxel_count + v.y * voxel_count + v.x];
+}
+
+fn init_rand(invocation_id : u32, seed : vec4<f32>) {
+	rand_seed = seed.xz;
+	rand_seed = fract(rand_seed * cos(35.456+f32(invocation_id) * seed.yw));
+	rand_seed = fract(rand_seed * cos(41.235+f32(invocation_id) * seed.xw));
+}
+
+fn rand() -> f32 {
+	rand_seed.x = fract(cos(dot(rand_seed, vec2<f32>(23.14077926, 232.61690225))) * 136.8168);
+	rand_seed.y = fract(cos(dot(rand_seed, vec2<f32>(54.47856553, 345.84153136))) * 534.7645);
+	return rand_seed.y;
 }

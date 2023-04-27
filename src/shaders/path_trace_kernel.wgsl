@@ -10,7 +10,7 @@ var<private> boundary_max: vec3<f32> = vec3<f32>(f32(grid_size) / 2, f32(grid_si
 var<private> depth_clip_min: f32 = 1f;
 var<private> depth_clip_max: f32 = 10f;
 
-const samples: i32 = 500;
+const samples: i32 = 50;
 const reflection_bounces: i32 = 1;
 const light_bounces: i32 = 2;
 const scatter: i32 = 5;
@@ -121,22 +121,6 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 		accum = bounce_results[i].voxel.color * accum + bounce_results[i].voxel.lightness * bounce_results[i].voxel.color;
 	}
 	return accum;
-
-	/* let illum = direct_illumination(curr_hit, &refl); */
-
-
-			/*  */
-			/* for (var scatter_i = 0; scatter_i < scatter; scatter_i++){ */
-			/* 	let bounce_direction = random_unit_vector() + curr_hit.normal; */
-			/* 	let bounce_ray = Ray(curr_hit.position, bounce_direction, 1 / bounce_direction); */
-			/* 	if (voxel_ray_any(bounce_ray, 0.0001, &curr_hit)){ */
-			/* 		illum += direct_illumination(curr_hit, &refl); */
-			/* 	} */
-			/* } */
-			/* return illum / f32(scatter); */
-
-	//return ColorRay(curr_hit.position);
-	//}
 }
 
 fn direct_illumination(orig_hit: RayHit, refl: ptr<function, f32>) -> vec3<f32> {
@@ -225,19 +209,20 @@ fn get_voxel(v: vec3<i32>) -> Voxel {
 	return scene_data.data[v.z * voxel_count * voxel_count + v.y * voxel_count + v.x];
 }
 
- fn rng() -> f32 {
-	var z = rng_seed + 0x9e3779b9;
-	rng_seed++;
-	z ^= z >> 15;
-	z *= 0x853bca6b;
-	z ^= z >> 13;
-	z *= 0xc2b2ae35;
-	z ^= (z >> 16);
-	return bitcast<f32>((z >> 9) | 0x3f800000) - 1.0;
- }
-
 fn random_unit_vector() -> vec3<f32> {
 	return normalize(vec3<f32>(rand() - 0.5, rand() - 0.5, rand() - 0.5));
+}
+
+fn init_rand(invocation_id : u32, seed : vec4<f32>) {
+	rand_seed = seed.xz;
+	rand_seed = fract(rand_seed * cos(35.456+f32(invocation_id) * seed.yw));
+	rand_seed = fract(rand_seed * cos(41.235+f32(invocation_id) * seed.xw));
+}
+
+fn rand() -> f32 {
+	rand_seed.x = fract(cos(dot(rand_seed, vec2<f32>(23.14077926, 232.61690225))) * 136.8168);
+	rand_seed.y = fract(cos(dot(rand_seed, vec2<f32>(54.47856553, 345.84153136))) * 534.7645);
+	return rand_seed.y;
 }
 
 fn init_rand(invocation_id : u32, seed : vec4<f32>) {

@@ -82,13 +82,13 @@ export class Scene {
 					if (z > 14) {
 						voxel.opacity = 1;
 						voxel.color = [0.2, 0.8, 0.7];
-						voxel.roughness = 1;
+						voxel.roughness = 0.2;
 						voxel.lightness = 2;
 					}
 					if (vec3.dist([x, y, 0], [this.voxel_count / 2, this.voxel_count / 2, 0]) < 4) {
 						voxel.opacity = 1;
-						// voxel.color = [x / 16, y / 16, z / 16];
-						voxel.color = [0.8, 0.8, 0.8];
+						voxel.color = [x / 16, y / 16, z / 16];
+						// voxel.color = [0.8, 0.8, 0.8];
 						voxel.roughness = 1;
 					}
 					// voxel.color = [0.8, 0.8, 0.8];
