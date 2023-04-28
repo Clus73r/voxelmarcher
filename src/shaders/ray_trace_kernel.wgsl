@@ -10,7 +10,7 @@ var<private> boundary_max: vec3<f32> = vec3<f32>(f32(grid_size) / 2, f32(grid_si
 var<private> depth_clip_min: f32 = 1f;
 var<private> depth_clip_max: f32 = 10f;
 
-const samples: i32 = 100;
+const samples: i32 = 10;
 const reflection_bounces: i32 = 2;
 
 var<private> rng_seed: u32;
@@ -60,7 +60,6 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     rng_seed = GlobalInvocationID.x + GlobalInvocationID.y * 1000;
     /* rng_seed = GlobalInvocationID.x + GlobalInvocationID.y * u32(scene.rng_start); */
     init_rand(GlobalInvocationID.x, vec4<f32>(0.454, -0.789, 0.456, -0.45));
-
     var pixel_color: vec3<f32>;
     for (var i = 0; i < samples; i++){
 
@@ -86,10 +85,12 @@ fn trace(ray: Ray) -> vec3<f32> {
 	var hit: RayHit;
 	var bounces: array<RayHit, reflection_bounces>;
 	var curr_ray = ray;
-	var color = vec3<f32>(0.2);
+	//var color = vec3<f32>(0.2);
+	var color = ray.direction;
 
 	for (var i = 0; i < reflection_bounces; i++){
 		if(voxel_ray_any(curr_ray, 0.001, &hit)){
+			return vec3<f32>(get_hit_ao(hit));
 			bounces[i] = hit;
 			curr_ray = ray_reflect(curr_ray, hit.position, hit.normal);
 		}
@@ -216,6 +217,25 @@ fn get_voxel_id(v: vec3<i32>) -> i32 {
 
 fn get_voxel(v: vec3<i32>) -> Voxel {
 	return scene_data.data[v.z * voxel_count * voxel_count + v.y * voxel_count + v.x];
+}
+
+fn get_hit_ao(hit: RayHit) -> f32 {
+	let voxel = hit.voxel_position + vec3<i32>(hit.normal);
+	var ao = 0f;
+
+	for (var d = 1; d < 3; d++){
+		var t_voxel = voxel;
+		t_voxel[d] -= 1;
+		if (t_voxel[d] >= 0 && get_voxel(t_voxel).opacity > 0.01){
+			ao += abs(hit.position[d] - f32(voxel[d]) * voxel_size) / voxel_size;
+		}
+		return ao;
+		t_voxel[d] += 2;
+		if (t_voxel[d] < voxel_count && get_voxel(t_voxel).opacity > 0.01){
+			ao += 1 - abs((hit.position[d] - f32((voxel[d]) + 1) * voxel_size));
+		}
+	}
+	return ao;
 }
 
 fn init_rand(invocation_id : u32, seed : vec4<f32>) {

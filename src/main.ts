@@ -31,7 +31,22 @@ addEventListener("mouseup", (e) => {
 		if (hit){
 			let voxel = new Voxel();
 			voxel.opacity = 0;
-			scene.set_voxel(voxel, hit.voxel_position);
+			// scene.set_voxel(voxel, hit.voxel_position);
+
+			console.log(`voxpos: ${hit.voxel_position}`);
+			console.log(`norm: ${hit.normal}`);
+			const vox = [
+				hit.voxel_position[0] + hit.normal[0],
+				hit.voxel_position[1] + hit.normal[1],
+				hit.voxel_position[2] + hit.normal[2]
+			];
+
+			console.log(`pos: ${hit.position}`);
+			console.log(`vox: ${vox}`);
+
+			const dist = hit.position[0] - vox[0] * this.voxel_size;
+			console.log(`dist: ${dist}`);
+
 		}
 	}
 });

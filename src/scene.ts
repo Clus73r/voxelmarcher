@@ -23,10 +23,12 @@ export class RayHit {
 	position: vec3;
 	voxel_position: number[];
 	voxel: Voxel;
-	constructor(position: vec3, voxel_position: number[], voxel: Voxel) {
+	normal: vec3;
+	constructor(position: vec3, voxel_position: number[], voxel: Voxel, normal: vec3) {
 		this.position = position;
 		this.voxel_position = voxel_position;
 		this.voxel = voxel;
+		this.normal = normal;
 	}
 }
 
@@ -76,14 +78,14 @@ export class Scene {
 					if (z < 1) {
 						voxel.opacity = 1;
 						voxel.color = [0.8, 0.2, 0.3];
-						voxel.lightness = 2;
+						voxel.lightness = 0;
 						voxel.roughness = y / 16;
 					}
 					if (z > 14) {
 						voxel.opacity = 1;
 						voxel.color = [0.2, 0.8, 0.7];
 						voxel.roughness = 0.2;
-						voxel.lightness = 2;
+						voxel.lightness = 0;
 					}
 					if (vec3.dist([x, y, 0], [this.voxel_count / 2, this.voxel_count / 2, 0]) < 4) {
 						voxel.opacity = 1;
@@ -91,7 +93,7 @@ export class Scene {
 						// voxel.color = [0.8, 0.8, 0.8];
 						voxel.roughness = 1;
 					}
-					// voxel.color = [0.8, 0.8, 0.8];
+					voxel.color = [0.8, 0.8, 0.8];
 					this.set_voxel_comp(voxel, x, y, z);
 				}
 			}
@@ -136,6 +138,7 @@ export class Scene {
 		let tdelta = [0, 0, 0];
 		let end_voxel = [0, 0, 0];
 		let thit = tmin;
+		let hit_normal: vec3 = [0, 0, 0];
 
 		for (let d = 0; d < 3; d++) {
 			end_voxel[d] = Math.max(0, Math.min(this.voxel_count - 1, Math.floor((ray_exit[d] - this.boundary_min[d]) / this.voxel_size)));
@@ -143,12 +146,10 @@ export class Scene {
 				step[d] = 1;
 				tdelta[d] = this.voxel_size / ray.direction[d];
 				tmax_comp[d] = tmin + (this.boundary_min[d] + voxel_upper_edge[d] * this.voxel_size - ray_entry[d]) / ray.direction[d];
-				// console.log(`pos d: ${d}, boundarymin: ${this.boundary_min[d]}, current_voxel: ${voxel_upper_edge[d]}, voxel_size: ${this.voxel_size}, ray_entry: ${ray_entry[d]}, ray_dir: ${ray.direction[d]}`);
 			} else if (ray.direction[d] < 0.0) {
 				step[d] = -1;
 				tdelta[d] = this.voxel_size / -ray.direction[d];
 				tmax_comp[d] = tmin + (this.boundary_min[d] + voxel[d] * this.voxel_size - ray_entry[d]) / ray.direction[d];
-				// console.log(`neg d: ${d}, boundarymin: ${this.boundary_min[d]}, prev voxel: ${voxel[d]}, calc: ${this.boundary_min[d] + voxel[d] * this.voxel_size - ray_entry[d]}, ray_entry: ${ray_entry[d]}, ray_dir: ${ray.direction[d]}`);
 			} else {
 				step[d] = 0;
 				tdelta[d] = tmax;
@@ -171,21 +172,24 @@ export class Scene {
 
 			if (this.get_voxel(voxel).opacity > 0.01) {
 				const hit_position = vec3.add(vec3.create(), ray.origin, vec3.scale(vec3.create(), ray.direction, thit));
-				return new RayHit(hit_position, voxel, this.get_voxel(voxel));
+				return new RayHit(hit_position, voxel, this.get_voxel(voxel), hit_normal);
 			}
 
 			if (tmax_comp[0] < tmax_comp[1] && tmax_comp[0] < tmax_comp[2]) {
 				voxel[0] += step[0];
 				tmax_comp[0] += tdelta[0];
 				thit += tdelta[0];
+				hit_normal = [-step[0], 0, 0]
 			} else if (tmax_comp[1] < tmax_comp[2]) {
 				voxel[1] += step[1];
 				tmax_comp[1] += tdelta[1];
 				thit += tdelta[1];
+				hit_normal = [0, -step[1], 0]
 			} else {
 				voxel[2] += step[2];
 				tmax_comp[2] += tdelta[2];
 				thit += tdelta[2];
+				hit_normal = [0, 0, -step[2]]
 			}
 		}
 

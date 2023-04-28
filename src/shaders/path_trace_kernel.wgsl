@@ -10,7 +10,7 @@ var<private> boundary_max: vec3<f32> = vec3<f32>(f32(grid_size) / 2, f32(grid_si
 var<private> depth_clip_min: f32 = 1f;
 var<private> depth_clip_max: f32 = 10f;
 
-const samples: i32 = 50;
+const samples: i32 = 10;
 const reflection_bounces: i32 = 1;
 const light_bounces: i32 = 2;
 const scatter: i32 = 5;
