@@ -66,7 +66,7 @@ export class Scene {
 		this.voxel_size = this.grid_size / this.voxel_count;
 		this.initialize_grid();
 		this.direct_light = vec3.normalize(vec3.create(), [1.5, 0.6, 1]);
-		this.direct_light_brightness = 0.5;
+		this.direct_light_brightness = 1;
 	}
 
 	initialize_grid() {
@@ -77,19 +77,20 @@ export class Scene {
 					let voxel = new Voxel();
 					if (z < 1) {
 						voxel.opacity = 1;
-						voxel.color = [0.8, 0.2, 0.3];
+						// voxel.color = [0.8, 0.2, 0.3];
+						voxel.color = [x / 4, y / 4, 0.9];
 						voxel.lightness = 0;
-						voxel.roughness = y / 16;
+						voxel.roughness = 1;
 					}
 					if (z > 14) {
 						voxel.opacity = 1;
-						voxel.color = [0.2, 0.8, 0.7];
+						voxel.color = [0.2, y / 4, 0.7];
 						voxel.roughness = 0.2;
-						voxel.lightness = 0;
+						voxel.lightness = 2;
 					}
-					if (vec3.dist([x, y, 0], [this.voxel_count / 2, this.voxel_count / 2, 0]) < 4) {
+					if (vec3.dist([x, y, z], [this.voxel_count / 2, this.voxel_count / 2, this.voxel_count / 2]) > 8) {
 						voxel.opacity = 1;
-						voxel.color = [x / 16, y / 16, z / 16];
+						voxel.color = [x / 4, y / 4, z / 4];
 						// voxel.color = [0.8, 0.8, 0.8];
 						voxel.roughness = 1;
 					}
@@ -177,18 +178,18 @@ export class Scene {
 
 			if (tmax_comp[0] < tmax_comp[1] && tmax_comp[0] < tmax_comp[2]) {
 				voxel[0] += step[0];
+				thit = tmax_comp[0];
 				tmax_comp[0] += tdelta[0];
-				thit += tdelta[0];
 				hit_normal = [-step[0], 0, 0]
 			} else if (tmax_comp[1] < tmax_comp[2]) {
 				voxel[1] += step[1];
+				thit = tmax_comp[1];
 				tmax_comp[1] += tdelta[1];
-				thit += tdelta[1];
 				hit_normal = [0, -step[1], 0]
 			} else {
 				voxel[2] += step[2];
+				thit = tmax_comp[2];
 				tmax_comp[2] += tdelta[2];
-				thit += tdelta[2];
 				hit_normal = [0, 0, -step[2]]
 			}
 		}

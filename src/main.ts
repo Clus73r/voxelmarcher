@@ -6,7 +6,7 @@ import { Scene, Voxel } from "./scene";
 
 const canvas = <HTMLCanvasElement>document.getElementById("canv");
 const fps = <HTMLParagraphElement>document.getElementById("fps");
-let camera = new FPCamera([-18.0, 0.0, 0.0], 0.0, 0.0);
+let camera = new FPCamera([0.0, 0.0, 0.0], 0.0, 0.0);
 //let camera = new FPCamera([-8.0, 0.0, 0.0], 0.0, 50.0);
 const scene = new Scene(camera);
 const renderer = new Renderer(canvas, scene);
@@ -28,24 +28,26 @@ addEventListener("mouseup", (e) => {
 		const x = e.clientX - rect.left;
 		const y = e.clientY - rect.top;
 		const hit = scene.ray_any(camera.screen_to_ray(x, y, canvas.width, canvas.height));
-		if (hit){
+		if (hit) {
 			let voxel = new Voxel();
 			voxel.opacity = 0;
-			// scene.set_voxel(voxel, hit.voxel_position);
-
-			console.log(`voxpos: ${hit.voxel_position}`);
-			console.log(`norm: ${hit.normal}`);
-			const vox = [
-				hit.voxel_position[0] + hit.normal[0],
-				hit.voxel_position[1] + hit.normal[1],
-				hit.voxel_position[2] + hit.normal[2]
-			];
-
-			console.log(`pos: ${hit.position}`);
-			console.log(`vox: ${vox}`);
-
-			const dist = hit.position[0] - vox[0] * this.voxel_size;
-			console.log(`dist: ${dist}`);
+			scene.set_voxel(voxel, hit.voxel_position);
+			return;
+			//
+			// console.log(`voxpos: ${hit.voxel_position}`);
+			// console.log(`norm: ${hit.normal}`);
+			// const vox = [
+			// 	hit.voxel_position[0] + hit.normal[0],
+			// 	hit.voxel_position[1] + hit.normal[1],
+			// 	hit.voxel_position[2] + hit.normal[2]
+			// ];
+			//
+			// console.log(`pos: ${hit.position}`);
+			// console.log(`vox: ${vox}`);
+			// console.log(`voxstart: ${vox[0] * scene.voxel_size - scene.grid_size / 2}`)
+			//
+			// const dist = hit.position[0] - (vox[0] * scene.voxel_size - scene.grid_size / 2);
+			// console.log(`dist: ${dist}`);
 
 		}
 	}
