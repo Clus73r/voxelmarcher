@@ -120,7 +120,7 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 		}
 		//accum = direct_illumination(bounce_results[i], &refl) * accum + bounce_results[i].voxel.lightness * bounce_results[i].voxel.color;
 		/* accum = bounce_results[i].voxel.color * accum + bounce_results[i].voxel.lightness * bounce_results[i].voxel.color; */
-		accum = bounce_results[i].voxel.color * accum + bounce_results[i].voxel.lightness * bounce_results[i].voxel.color; // * direct_illumination(bounce_results[i], &refl);
+		accum = bounce_results[i].voxel.color * accum + (bounce_results[i].voxel.lightness + direct_illumination(bounce_results[i], &refl)) * bounce_results[i].voxel.color * (1 - min(1, bounce_results[i].depth))/ 5; // * direct_illumination(bounce_results[i], &refl);
 	}
 	return accum;
 }
