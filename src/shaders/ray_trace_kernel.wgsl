@@ -10,7 +10,7 @@ var<private> boundary_max: vec3<f32> = vec3<f32>(f32(grid_size) / 2, f32(grid_si
 var<private> depth_clip_min: f32 = 1f;
 var<private> depth_clip_max: f32 = 10f;
 
-const samples: i32 = 10;
+const samples: i32 = 1;
 const reflection_bounces: i32 = 2;
 
 var<private> rng_seed: u32;
@@ -278,6 +278,9 @@ fn get_hit_ao(hit: RayHit) -> f32 {
 	if (get_voxel(vec3<i32>(voxel.x + 1, voxel.y, voxel.z - 1)).opacity > 0.01){
 		corner_ao = max(corner_ao, min(ao.x, inv_ao.z) * (1 - min(1, ceil(cond_ao.x + cond_inv_ao.z))));
 	}
+
+	//var remove_ao: f32;
+	//if (get_voxel(vec3<))
 
 	return cond_ao.x + cond_ao.y + cond_ao.z + cond_inv_ao.x + cond_inv_ao.y + cond_inv_ao.z + corner_ao;
 }
