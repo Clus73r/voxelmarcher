@@ -1,4 +1,5 @@
 import { Scene } from "./scene";
+import common from "./shaders/common.wgsl"
 import ray_trace_kernel from "./shaders/ray_trace_kernel.wgsl"
 import path_trace_kernel from "./shaders/path_trace_kernel.wgsl"
 import screen_shader from "./shaders/screen_shader.wgsl"
@@ -129,7 +130,7 @@ export class Renderer {
 				layout: ray_tracing_pipline_layout,
 				compute: {
 					entryPoint: "main",
-					module: this.device.createShaderModule({ code: ray_trace_kernel }),
+					module: this.device.createShaderModule({ code: common + ray_trace_kernel }),
 					constants: {
 						grid_size: this.scene.grid_size,
 						voxel_count: this.scene.voxel_count,

@@ -92,7 +92,3 @@ export class FPCamera {
 		return new Ray(this.position, ray_direction);
 	}
 }
-
-export class TPCamera {
-
-}

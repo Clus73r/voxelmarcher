@@ -11,6 +11,7 @@ let camera = new FPCamera([0.0, 0.0, 0.0], 0.0, 0.0);
 const scene = new Scene(camera);
 const renderer = new Renderer(canvas, scene);
 
+scene.initialize_default_grid();
 renderer.initialize();
 
 let last_time = performance.now();
@@ -32,23 +33,6 @@ addEventListener("mouseup", (e) => {
 			let voxel = new Voxel();
 			voxel.opacity = 0;
 			scene.set_voxel(voxel, hit.voxel_position);
-			return;
-			//
-			// console.log(`voxpos: ${hit.voxel_position}`);
-			// console.log(`norm: ${hit.normal}`);
-			// const vox = [
-			// 	hit.voxel_position[0] + hit.normal[0],
-			// 	hit.voxel_position[1] + hit.normal[1],
-			// 	hit.voxel_position[2] + hit.normal[2]
-			// ];
-			//
-			// console.log(`pos: ${hit.position}`);
-			// console.log(`vox: ${vox}`);
-			// console.log(`voxstart: ${vox[0] * scene.voxel_size - scene.grid_size / 2}`)
-			//
-			// const dist = hit.position[0] - (vox[0] * scene.voxel_size - scene.grid_size / 2);
-			// console.log(`dist: ${dist}`);
-
 		}
 	}
 });

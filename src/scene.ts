@@ -74,6 +74,20 @@ export class Scene {
 		for (let x = 0; x < this.voxel_count; x++) {
 			for (let y = 0; y < this.voxel_count; y++) {
 				for (let z = 0; z < this.voxel_count; z++) {
+					let vox = new Voxel();
+					vox.color = [0, 0, 0];
+					vox.opacity = 0;
+					this.grid[z * this.voxel_count * this.voxel_count + y * this.voxel_count + x] = vox;
+
+				}
+			}
+		}
+	}
+
+	initialize_default_grid() {
+		for (let x = 0; x < this.voxel_count; x++) {
+			for (let y = 0; y < this.voxel_count; y++) {
+				for (let z = 0; z < this.voxel_count; z++) {
 					let voxel = new Voxel();
 					if (z < 1) {
 						voxel.opacity = 1;
@@ -215,10 +229,16 @@ export class Scene {
 	}
 
 	set_voxel(value: Voxel, voxel: number[]) {
-		this.grid[voxel[2] * this.voxel_count * this.voxel_count + voxel[1] * this.voxel_count + voxel[0]] = value;
+		if (voxel[0] > 0 && voxel[0] < this.voxel_count - 1 &&
+			voxel[1] > 0 && voxel[1] < this.voxel_count - 1 &&
+			voxel[2] > 0 && voxel[2] < this.voxel_count - 1)
+			this.grid[voxel[2] * this.voxel_count * this.voxel_count + voxel[1] * this.voxel_count + voxel[0]] = value;
 	}
 
 	set_voxel_comp(value: Voxel, x: number, y: number, z: number) {
-		this.grid[z * this.voxel_count * this.voxel_count + y * this.voxel_count + x] = value;
+		if (x > 0 && x < this.voxel_count - 1 &&
+			y > 0 && y < this.voxel_count - 1 &&
+			z > 0 && z < this.voxel_count - 1)
+			this.grid[z * this.voxel_count * this.voxel_count + y * this.voxel_count + x] = value;
 	}
 }
