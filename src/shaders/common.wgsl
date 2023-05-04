@@ -12,12 +12,11 @@ var<private> depth_clip_max: f32 = 10f;
 
 var<private> rng_seed: u32;
 
-const samples: i32 = 100;
+const samples: i32 = 3;
 const light_bounces: i32 = 3;
-const reflection_bounces: i32 = 1;
+const reflection_bounces: i32 = 3;
 const scatter: i32 = 5;
 const ambient_light: f32 = 0.03;
-const ao: f32 = 0.2;
 
 struct SceneParameter {
     camera_pos: vec3<f32>,
@@ -108,10 +107,26 @@ fn get_voxel(v: vec3<i32>) -> Voxel {
 	return scene_data.data[v.z * voxel_count * voxel_count + v.y * voxel_count + v.x];
 }
 
-fn random_unit_vector() -> vec3<f32> {
+fn get_voxel_by_position(v: vec3<f32>) -> Voxel {
+	return get_voxel(vec3<i32>((v - boundary_min) / f32(voxel_size)));
+}
+
+fn random_unit_sphere_point() -> vec3<f32> {
 	var v = vec3<f32>(rng() * 2 - 1, rng() * 2 - 1, rng() * 2 - 1);
 	while (v.x * v.x + v.y * v.y + v.z * v.z > 1.0){
 		v = vec3<f32>(rng() * 2 - 1, rng() * 2 - 1, rng() * 2 - 1);
 	}
-	return normalize(v);
+	return v;
+}
+
+fn random_unit_hemisphere_point(normal: vec3<f32>) -> vec3<f32> {
+	var v = vec3<f32>(rng() * 2 - 1, rng() * 2 - 1, rng() * 2 - 1);
+	while (v.x * v.x + v.y * v.y + v.z * v.z > 1.0 || dot(normal, v) < 0){
+		v = vec3<f32>(rng() * 2 - 1, rng() * 2 - 1, rng() * 2 - 1);
+	}
+	return v;
+}
+
+fn random_unit_vector() -> vec3<f32> {
+	return normalize(random_unit_sphere_point());
 }

@@ -1,3 +1,6 @@
+const ao_samples: i32 = 5;
+const ao_range: f32 = 0.3;
+
 fn gamma_correct(color: vec3<f32>) -> vec3<f32> {
     return color / f32(samples);
 }
@@ -11,7 +14,7 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 
 	for (var i = 0; i < reflection_bounces; i++){
 		if(voxel_ray_any(curr_ray, 0.001, &hit)){
-			//return vec3<f32>(get_hit_ao(hit));
+			//return vec3<f32>(get_point_ao(hit.position, hit.normal));
 			bounces[i] = hit;
 			curr_ray = ray_reflect(curr_ray, hit.position, hit.normal);
 		}
@@ -23,7 +26,7 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 		}
 		let t = bounces[i].voxel.roughness;
 		//color = bounces[i].voxel.color * illumination(bounces[i].position);
-		color = color * (1 - t) + t * bounces[i].voxel.color * illumination(bounces[i].position) * (1 - get_hit_ao(bounces[i]));
+		color = color * (1 - t) + t * bounces[i].voxel.color * (1 - get_point_ao(bounces[i].position)) * illumination(bounces[i].position);
 	}
 
 	return color;
@@ -95,71 +98,11 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 	return false;
 }
 
-fn get_hit_ao(hit: RayHit) -> f32 {
-	let voxel = hit.voxel_position + vec3<i32>(hit.normal);
-	let expo = 6f;
-	let fac = 0.2;
-
-	let dist = pow(((hit.position - (vec3<f32>(voxel) * voxel_size - grid_size / 2)) / voxel_size), vec3<f32>(expo));
-	let inv_dist = pow(((hit.position - (vec3<f32>(voxel + 1) * voxel_size - grid_size / 2)) / voxel_size), vec3<f32>(expo));
-
-	let ao = dist * fac * (1 - abs(hit.normal));
-	let inv_ao = inv_dist * fac * (1 - abs(hit.normal));
-
-	let cond_ao = ao * vec3<f32>(
-		get_voxel(vec3<i32>(voxel.x + 1, voxel.y, voxel.z)).opacity,
-		get_voxel(vec3<i32>(voxel.x, voxel.y + 1, voxel.z)).opacity,
-		get_voxel(vec3<i32>(voxel.x, voxel.y, voxel.z + 1)).opacity,
-	);
-
-	let cond_inv_ao = inv_ao * vec3<f32>(
-		get_voxel(vec3<i32>(voxel.x - 1, voxel.y, voxel.z)).opacity,
-		get_voxel(vec3<i32>(voxel.x, voxel.y - 1, voxel.z)).opacity,
-		get_voxel(vec3<i32>(voxel.x, voxel.y, voxel.z - 1)).opacity,
-	);
-
-	var corner_ao = 0f;
-	if (get_voxel(vec3<i32>(voxel.x + 1, voxel.y + 1, voxel.z)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(ao.x, ao.y) * (1 - min(1, ceil(cond_ao.x + cond_ao.y))));
+fn get_point_ao(point: vec3<f32>) -> f32 {
+	var ao: f32 = 0.0;
+	for (var i = 0; i < ao_samples; i++) {
+		let sample_point = random_unit_sphere_point() * ao_range + point;
+		ao += get_voxel_by_position(sample_point).opacity;
 	}
-	if (get_voxel(vec3<i32>(voxel.x - 1, voxel.y + 1, voxel.z)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(inv_ao.x, ao.y) * (1 - min(1, ceil(cond_inv_ao.x + cond_ao.y))));
-	}
-	if (get_voxel(vec3<i32>(voxel.x + 1, voxel.y - 1, voxel.z)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(ao.x, inv_ao.y) * (1 - min(1, ceil(cond_ao.x + cond_inv_ao.y))));
-	}
-	if (get_voxel(vec3<i32>(voxel.x - 1, voxel.y - 1, voxel.z)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(inv_ao.x, inv_ao.y) * (1 - min(1, ceil(cond_inv_ao.x + cond_inv_ao.y))));
-	}
-
-	if (get_voxel(vec3<i32>(voxel.x, voxel.y + 1, voxel.z + 1)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(ao.y, ao.z) * (1 - min(1, ceil(cond_ao.y + cond_ao.z))));
-	}
-	if (get_voxel(vec3<i32>(voxel.x, voxel.y - 1, voxel.z + 1)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(inv_ao.y, ao.z) * (1 - min(1, ceil(cond_inv_ao.y + cond_ao.z))));
-	}
-	if (get_voxel(vec3<i32>(voxel.x, voxel.y - 1, voxel.z - 1)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(inv_ao.y, inv_ao.z) * (1 - min(1, ceil(cond_inv_ao.y + cond_inv_ao.z))));
-	}
-	if (get_voxel(vec3<i32>(voxel.x, voxel.y + 1, voxel.z - 1)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(ao.y, inv_ao.z) * (1 - min(1, ceil(cond_ao.y + cond_inv_ao.z))));
-	}
-
-	if (get_voxel(vec3<i32>(voxel.x + 1, voxel.y, voxel.z + 1)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(ao.x, ao.z) * (1 - min(1, ceil(cond_ao.x + cond_ao.z))));
-	}
-	if (get_voxel(vec3<i32>(voxel.x - 1, voxel.y, voxel.z + 1)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(inv_ao.x, ao.z) * (1 - min(1, ceil(cond_inv_ao.x + cond_ao.z))));
-	}
-	if (get_voxel(vec3<i32>(voxel.x - 1, voxel.y, voxel.z - 1)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(inv_ao.x, inv_ao.z) * (1 - min(1, ceil(cond_inv_ao.x + cond_inv_ao.z))));
-	}
-	if (get_voxel(vec3<i32>(voxel.x + 1, voxel.y, voxel.z - 1)).opacity > 0.01){
-		corner_ao = max(corner_ao, min(ao.x, inv_ao.z) * (1 - min(1, ceil(cond_ao.x + cond_inv_ao.z))));
-	}
-
-	//var remove_ao: f32;
-	//if (get_voxel(vec3<))
-
-	return cond_ao.x + cond_ao.y + cond_ao.z + cond_inv_ao.x + cond_inv_ao.y + cond_inv_ao.z + corner_ao;
+	return max(0, ao / f32(ao_samples) - 0.5);
 }

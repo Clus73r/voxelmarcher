@@ -96,12 +96,6 @@ export class Scene {
 						voxel.lightness = 0;
 						voxel.roughness = 1;
 					}
-					if (z > 14) {
-						voxel.opacity = 1;
-						voxel.color = [0.2, y / 4, 0.7];
-						voxel.roughness = 0.2;
-						voxel.lightness = 0;
-					}
 					if (vec3.dist([x, y, z], [this.voxel_count / 2, this.voxel_count / 2, this.voxel_count / 2]) > 8) {
 						voxel.opacity = 1;
 						voxel.color = [x / 4, y / 4, z / 4];
@@ -109,7 +103,13 @@ export class Scene {
 						voxel.lightness = 0;
 						voxel.roughness = 1;
 					}
-					voxel.color = [0.8, 0.8, 0.8];
+					if (z > 12) {
+						voxel.opacity = 1;
+						voxel.color = [0.2, y / 4, 0.7];
+						voxel.roughness = 0.2;
+						voxel.lightness = 0;
+					}
+					//voxel.color = [0.8, 0.8, 0.8];
 					this.set_voxel_comp(voxel, x, y, z);
 				}
 			}
