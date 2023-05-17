@@ -1,9 +1,9 @@
 import { Scene } from "./scene";
-import common from "./shaders/common.wgsl"
-import ray_trace_kernel from "./shaders/ray_trace_kernel.wgsl"
-import path_trace_kernel from "./shaders/path_trace_kernel.wgsl"
-import screen_shader from "./shaders/screen_shader.wgsl"
-import { mat3 } from "gl-matrix";
+import common from "./shaders/common.wgsl";
+import ray_trace_kernel from "./shaders/ray_trace_kernel.wgsl";
+import path_trace_kernel from "./shaders/path_trace_kernel.wgsl";
+import screen_shader from "./shaders/screen_shader.wgsl";
+import { HDRTexture } from "./hdrtex";
 
 export class Renderer {
 	canvas: HTMLCanvasElement;
@@ -17,6 +17,7 @@ export class Renderer {
 	sampler: GPUSampler | undefined;
 	sceneParameters: GPUBuffer | undefined;
 	sceneData: GPUBuffer | undefined;
+	lightData: GPUBuffer | undefined;
 
 	ray_tracing_bind_group: GPUBindGroup | undefined;
 	ray_tracing_pipeline: GPUComputePipeline | undefined;
@@ -25,15 +26,33 @@ export class Renderer {
 	screen_pipeline: GPURenderPipeline | undefined;
 	scene: Scene;
 
+	pathtracing: boolean;
+	hdrtexture: HDRTexture;
+
+	initialized: boolean = false;
+
 	constructor(canvas: HTMLCanvasElement, scene: Scene) {
 		this.canvas = canvas;
 		this.scene = scene;
+		this.pathtracing = false;
+		this.hdrtexture = new HDRTexture();
 	}
 
-	async initialize() {
+	async initialize(pathtracing: boolean) {
+		this.pathtracing = pathtracing;
 		await this.setupDevice();
 		await this.createAssets();
 		await this.setupPipeline();
+		this.initialized = true;
+	}
+
+	set_hdr(hdr: HDRTexture) {
+	}
+
+	shutdown() {
+		this.initialized = false;
+		this.device?.destroy();
+		this.color_buffer?.destroy();
 	}
 
 	async setupDevice() {
@@ -68,13 +87,20 @@ export class Renderer {
 		});
 		this.sceneParameters = this.device?.createBuffer({
 			size: 80,
-			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-		})
-		const scene_size = this.scene.voxel_count * this.scene.voxel_count * this.scene.voxel_count;
+			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+		});
+		const scene_size =
+			this.scene.voxel_count * this.scene.voxel_count * this.scene.voxel_count;
 		this.sceneData = this.device?.createBuffer({
 			size: scene_size * 8 * 4,
-			usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
-		})
+			usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+		});
+		this.lightData = this.device?.createBuffer({
+			size: 128 * 4,
+			usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+		});
+
+		await this.hdrtexture.initialize(<GPUDevice>this.device);
 	}
 
 	async setupPipeline() {
@@ -94,16 +120,33 @@ export class Renderer {
 						binding: 1,
 						visibility: GPUShaderStage.COMPUTE,
 						buffer: {
-							type: "uniform"
-						}
+							type: "uniform",
+						},
 					},
 					{
 						binding: 2,
 						visibility: GPUShaderStage.COMPUTE,
 						buffer: {
 							type: "read-only-storage",
+						},
+					},
+					{
+						binding: 3,
+						visibility: GPUShaderStage.COMPUTE,
+						texture: {},
+					},
+					{
+						binding: 4,
+						visibility: GPUShaderStage.COMPUTE,
+						sampler: {},
+					},
+					{
+						binding: 5,
+						visibility: GPUShaderStage.COMPUTE,
+						buffer: {
+							type: "read-only-storage"
 						}
-					}
+					},
 				],
 			})
 		);
@@ -113,8 +156,20 @@ export class Renderer {
 			label: "Ray tracing bind group",
 			entries: [
 				{ binding: 0, resource: <GPUTextureView>this.color_buffer_view },
-				{ binding: 1, resource: <GPUBufferBinding>{ buffer: this.sceneParameters } },
+				{
+					binding: 1,
+					resource: <GPUBufferBinding>{ buffer: this.sceneParameters },
+				},
 				{ binding: 2, resource: <GPUBufferBinding>{ buffer: this.sceneData } },
+				{
+					binding: 3, resource: <GPUTextureView>this.hdrtexture.view,
+				},
+				{
+					binding: 4, resource: <GPUSampler>this.hdrtexture.sampler
+				},
+				{
+					binding: 5, resource: <GPUBufferBinding>{ buffer: this.lightData }
+				}
 			],
 		});
 
@@ -130,7 +185,11 @@ export class Renderer {
 				layout: ray_tracing_pipline_layout,
 				compute: {
 					entryPoint: "main",
-					module: this.device.createShaderModule({ code: common + ray_trace_kernel }),
+					module: this.device.createShaderModule({
+						code:
+							common +
+							(!this.pathtracing ? ray_trace_kernel : path_trace_kernel),
+					}),
 					constants: {
 						grid_size: this.scene.grid_size,
 						voxel_count: this.scene.voxel_count,
@@ -173,37 +232,72 @@ export class Renderer {
 				entryPoint: "frag_main",
 				targets: [{ format: "bgra8unorm" }],
 			},
-			primitive: { topology: "triangle-list", cullMode: "back", frontFace: "cw" },
+			primitive: {
+				topology: "triangle-list",
+				cullMode: "back",
+				frontFace: "cw",
+			},
 		});
 	}
 
 	render = () => {
+		if (!this.initialized) return;
+
+		let lights = [];
+		for (let x = 0; x < this.scene.voxel_count; x++) {
+			for (let y = 0; y < this.scene.voxel_count; y++) {
+				for (let z = 0; z < this.scene.voxel_count; z++) {
+					if (this.scene.get_voxel([x, y, z]).lightness > 0) {
+						lights.push([x, y, z]);
+					}
+				}
+			}
+		}
 
 		this.device?.queue.writeBuffer(
-			<GPUBuffer>this.sceneParameters, 0,
-			new Float32Array(
-				[
-					this.scene.camera.position[0],
-					this.scene.camera.position[1],
-					this.scene.camera.position[2],
-					new Date().getMilliseconds(),
-					this.scene.camera.forward[0],
-					this.scene.camera.forward[1],
-					this.scene.camera.forward[2],
-					0.0,
-					this.scene.camera.right[0],
-					this.scene.camera.right[1],
-					this.scene.camera.right[2],
-					0.0,
-					this.scene.camera.up[0],
-					this.scene.camera.up[1],
-					this.scene.camera.up[2],
-					0.0,
-					this.scene.direct_light[0],
-					this.scene.direct_light[1],
-					this.scene.direct_light[2],
-					this.scene.direct_light_brightness,
-				]), 0, 20);
+			<GPUBuffer>this.sceneParameters,
+			0,
+			new Float32Array([
+				this.scene.camera.position[0],
+				this.scene.camera.position[1],
+				this.scene.camera.position[2],
+				new Date().getMilliseconds(),
+				this.scene.camera.forward[0],
+				this.scene.camera.forward[1],
+				this.scene.camera.forward[2],
+				lights.length,
+				this.scene.camera.right[0],
+				this.scene.camera.right[1],
+				this.scene.camera.right[2],
+				0.0,
+				this.scene.camera.up[0],
+				this.scene.camera.up[1],
+				this.scene.camera.up[2],
+				0.0,
+				this.scene.direct_light[0],
+				this.scene.direct_light[1],
+				this.scene.direct_light[2],
+				this.scene.direct_light_brightness,
+			]),
+			0,
+			20
+		);
+
+		const light_data = new Float32Array(4 * lights.length);
+		for (let i = 0; i < lights.length; ++i) {
+			light_data[4 * i] = lights[i][0];
+			light_data[4 * i + 1] = lights[i][1];
+			light_data[4 * i + 2] = lights[i][2];
+			light_data[4 * i + 3] = 0;
+		}
+
+		this.device?.queue.writeBuffer(
+			<GPUBuffer>this.lightData,
+			0,
+			light_data,
+			0,
+			lights.length * 4
+		);
 
 		const scene_data = new Float32Array(8 * this.scene.grid.length);
 		for (let i = 0; i < this.scene.grid.length; ++i) {
@@ -218,7 +312,11 @@ export class Renderer {
 		}
 
 		this.device?.queue.writeBuffer(
-			<GPUBuffer>this.sceneData, 0, scene_data, 0, this.scene.grid.length * 8
+			<GPUBuffer>this.sceneData,
+			0,
+			scene_data,
+			0,
+			this.scene.grid.length * 8
 		);
 
 		const commandEncoder = this.device?.createCommandEncoder();
@@ -230,7 +328,7 @@ export class Renderer {
 			this.canvas.width / 16,
 			this.canvas.height / 16,
 			1
-		); // hier noch die workgroups anpassen
+		);
 		ray_trace_pass?.end();
 
 		const textureView = this.context?.getCurrentTexture().createView();
@@ -244,8 +342,8 @@ export class Renderer {
 				},
 			],
 		});
-		renderPass?.setPipeline(<GPURenderPipeline>this.screen_pipeline)
-		renderPass?.setBindGroup(0, <GPUBindGroup>this.screen_bind_group)
+		renderPass?.setPipeline(<GPURenderPipeline>this.screen_pipeline);
+		renderPass?.setBindGroup(0, <GPUBindGroup>this.screen_bind_group);
 		renderPass?.draw(6, 1, 0, 0);
 		renderPass?.end();
 

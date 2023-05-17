@@ -7,16 +7,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
+    <link href="catpuccin.css" rel="stylesheet" type="text/css" />
     <link href="styles.css" rel="stylesheet" type="text/css" />
-    <h1 class="heading">a</h1>
+    <h1 class="heading">owoxls</h1>
 
-    <label class="switch">
-      <input type="checkbox" />
-      <span class="slider"></span>
-    </label>
+    <div class="btn-container">
+      <label class="switch btn-renderer">
+        <input type="checkbox" name="renderer" id="renderer" value="1">
+        <label for="renderer" data-on="Pathtracing" data-off="Raytracing" class="btn-renderer-inner"></label>
+      </label>
+    </div>
 
     <div class="main">
-      <canvas id="canv" width="256" height="256"></canvas>
+      <canvas id="canv" class="layered" width="1024" height="1024"></canvas>
+      <div id="canv-overlay" class="layered"></div>
+    </div>
+    <div class="section" id="palette">
+      <button class="palette-button"><div class="palette-inner"></div></button>
     </div>
     <p id="fps"></p>
 

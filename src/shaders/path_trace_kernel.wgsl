@@ -1,3 +1,5 @@
+const light_scatter_samples: i32 = 2;
+
 fn gamma_correct(color: vec3<f32>) -> vec3<f32> {
     let correction = 1.0 / f32(samples);
     return sqrt(correction * color);
@@ -7,36 +9,58 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 	if (depth <= 0) {
 		return vec3<f32>(0);
 	}
-	var accum: vec3<f32> = vec3<f32>(0.0);
-	var mask: vec3<f32> = vec3<f32>(1.0);
-	var curr_ray: Ray = ray;
-	var curr_hit: RayHit;
-	var refl: f32 = 1.0;
+		var accum: vec3<f32> = vec3<f32>(0.0);
+		var mask: vec3<f32> = vec3<f32>(1.0);
+		var curr_ray: Ray = ray;
+		var curr_hit: RayHit;
+		var refl: f32 = 1.0;
+		var hits: i32 = 0;
 
-	var bounce_results: array<RayHit, light_bounces>;
+		var bounce_results: array<RayHit, light_bounces>;
 
-	for (var i = 0; i < light_bounces; i++){
-		if (voxel_ray_any(curr_ray, 0.0001, &curr_hit)) {
-			//return curr_hit.voxel.color;
-			let bounce_direction = random_unit_vector() + curr_hit.normal;
-			if (all(bounce_direction == vec3<f32>(0))){
-				curr_ray = Ray(curr_hit.position, curr_hit.normal, 1 / curr_hit.normal);
+		for (; hits < light_bounces;){
+			if (voxel_ray_any(curr_ray, 0.0001, &curr_hit)) {
+				let bounce_direction = random_unit_vector() + curr_hit.normal;
+				if (all(bounce_direction == vec3<f32>(0))){
+					curr_ray = Ray(curr_hit.position, curr_hit.normal, 1 / curr_hit.normal);
+				} else {
+					let normalized = normalize(bounce_direction);
+					curr_ray = Ray(curr_hit.position, normalized, 1 / normalized);
+				}
+				bounce_results[hits] = curr_hit;
+				hits++;
 			} else {
-				curr_ray = Ray(curr_hit.position, bounce_direction, 1 / bounce_direction);
+				// accum = pow(textureSampleLevel(hdr_tex, hdr_sampler, sample_spherical_map(curr_ray.direction), 0.0).rgb, vec3<f32>(2)) * 5;
+				accum = vec3<f32>(pow(max(0, dot(curr_ray.direction, scene.direct_light) - 0.98) * 40, 1));
+				break;
 			}
-			bounce_results[i] = curr_hit;
 		}
-	}
-	accum = vec3<f32>(0.0);
-	for (var i: i32 = light_bounces; i >= 0; i--){
-		if (all(bounce_results[i].normal == vec3<f32>(0))){
-			continue;
+
+		if (hits == 0){
+			// return textureSampleLevel(hdr_tex, hdr_sampler, sample_spherical_map(ray.direction), 0.0).rgb;
+			return vec3<f32>(pow(max(0, dot(ray.direction, scene.direct_light) - 0.95) * 20, 1));
 		}
-		//accum = direct_illumination(bounce_results[i], &refl) * accum + bounce_results[i].voxel.lightness * bounce_results[i].voxel.color;
-		/* accum = bounce_results[i].voxel.color * accum + bounce_results[i].voxel.lightness * bounce_results[i].voxel.color; */
-		accum = bounce_results[i].voxel.color * accum + (bounce_results[i].voxel.lightness + direct_illumination(bounce_results[i], &refl)) * bounce_results[i].voxel.color * (1 - min(1, bounce_results[i].depth))/ 5; // * direct_illumination(bounce_results[i], &refl);
-	}
-	return accum;
+		if (hits == light_bounces){
+			accum = vec3<f32>(0, 0, 0);
+		} else {
+			// accum = textureSampleLevel(hdr_tex, hdr_sampler, sample_spherical_map(bounce_results[hits - 1].ray_direction), 0.0).rgb;
+			/* accum = vec3<f32>(max(0, dot(bounce_results[hits - 1].ray_direction, scene.direct_light))); */
+			// accum = vec3<f32>(0);
+		}
+		for (var i: i32 = hits - 1; i >= 0; i--){
+			let bounce = bounce_results[i];
+			/* accum = min(vec3<f32>(1), accum) * min(vec3<f32>(1), bounce.voxel.color); */
+			accum = accum * bounce.voxel.color
+				+ bounce_results[i].voxel.lightness * bounce_results[i].voxel.color;
+			// if (all(bounce.normal == vec3<f32>(0)) && all(bounce.ray_direction == vec3<f32>(0))){
+			// 	// accum = textureSampleLevel(hdr_tex, hdr_sampler, sample_spherical_map(bounce_results[i].ray_direction), 0.0).rgb;
+			// 	accum = vec3<f32>(0.5);
+			// 	continue;
+			// }
+			// accum = accum * bounce.voxel.color;
+			// accum = accum * bounce.voxel.color;
+		}
+	return accum; // / f32(light_scatter_samples);
 }
 
 fn direct_illumination(orig_hit: RayHit, refl: ptr<function, f32>) -> vec3<f32> {
@@ -82,6 +106,7 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 			(*hit).voxel_position = voxel;
 			(*hit).depth = 1 - (thit - depth_clip_min) / (depth_clip_max - depth_clip_min);
 			(*hit).normal = hit_normal;
+			(*hit).ray_direction = ray.direction;
 			return true;
 		}
 

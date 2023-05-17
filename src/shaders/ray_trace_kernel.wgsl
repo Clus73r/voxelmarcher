@@ -1,5 +1,5 @@
 const ao_samples: i32 = 5;
-const ao_range: f32 = 0.3;
+const ao_range: f32 = 0.5;
 
 fn gamma_correct(color: vec3<f32>) -> vec3<f32> {
     return color / f32(samples);
@@ -9,24 +9,46 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 	var hit: RayHit;
 	var bounces: array<RayHit, reflection_bounces>;
 	var curr_ray = ray;
-	//var color = vec3<f32>(0.2);
-	var color = ray.direction;
+	var color = vec3<f32>(0.0);
+	var hits: i32 = 0;
 
 	for (var i = 0; i < reflection_bounces; i++){
 		if(voxel_ray_any(curr_ray, 0.001, &hit)){
-			//return vec3<f32>(get_point_ao(hit.position, hit.normal));
 			bounces[i] = hit;
 			curr_ray = ray_reflect(curr_ray, hit.position, hit.normal);
+			hits++;
+			if (hit.voxel.roughness > 0.99){
+				//return vec3<f32>(1);
+				break;
+			}
+		} else {
+			break;
 		}
 	}
 
-	for (var i: i32 = reflection_bounces; i >= 0; i--){
-		if (all(bounces[i].normal == vec3<f32>(0))){
-			continue;
-		}
+	if (hits == 0){
+		return vec3<f32>(24f / 255f, 24f / 255f, 37f / 255f);
+		return ray.direction;
+	}
+
+	for (var i: i32 = hits; i >= 0; i--){
 		let t = bounces[i].voxel.roughness;
-		//color = bounces[i].voxel.color * illumination(bounces[i].position);
-		color = color * (1 - t) + t * bounces[i].voxel.color * (1 - get_point_ao(bounces[i].position)) * illumination(bounces[i].position);
+		color = color * (1 - t) + t * bounces[i].voxel.color * illumination(bounces[i].position);
+		color *= (1 - get_point_ao(bounces[i].position));
+		
+		for (var l: i32 = 0; l < i32(scene.light_count); l++){
+			let light = lights.data[l]; // STHET NOCH AUF 1
+			if i32(light.emitter_type) == 0 {
+				let light_voxel = get_voxel(vec3<i32>(light.location));
+				// return (vec3<f32>(light.location) * voxel_size - boundary_min) / grid_size;
+				let light_voxel_location = light.location * voxel_size + boundary_min;
+				let light_voxel_location_top = light_voxel_location + voxel_size;
+				let light_voxel_location_mid = (light_voxel_location + light_voxel_location_top) / 2;
+				let dist = distance(light_voxel_location_mid, bounces[i].position);
+				let intensity = 1 / pow(dist, 2);
+				color += light_voxel.color * vec3<f32>(intensity);
+			}
+		}
 	}
 
 	return color;
@@ -74,6 +96,7 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 			(*hit).voxel_position = voxel;
 			(*hit).depth = 1 - (thit - depth_clip_min) / (depth_clip_max - depth_clip_min);
 			(*hit).normal = hit_normal;
+			(*hit).ray_direction = ray.direction;
 			return true;
 		}
 
@@ -101,7 +124,7 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 fn get_point_ao(point: vec3<f32>) -> f32 {
 	var ao: f32 = 0.0;
 	for (var i = 0; i < ao_samples; i++) {
-		let sample_point = random_unit_sphere_point() * ao_range + point;
+		let sample_point = random_unit_vector() * rng() * ao_range + point;
 		ao += get_voxel_by_position(sample_point).opacity;
 	}
 	return max(0, ao / f32(ao_samples) - 0.5);

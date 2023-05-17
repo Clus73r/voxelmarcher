@@ -1,5 +1,6 @@
-import { vec3 } from "gl-matrix";
 import { FPCamera } from "./camera";
+import { Controller } from "./controller";
+import { Vec3, vec3 } from "wgpu-matrix";
 
 // const grid_size = 2;
 // const voxel_count = 4;
@@ -8,10 +9,10 @@ import { FPCamera } from "./camera";
 type OptRayHit = RayHit | undefined;
 
 export class Ray {
-	origin: vec3;
-	direction: vec3;
-	inv_direction: vec3;
-	constructor(origin: vec3, direction: vec3) {
+	origin: Vec3;
+	direction: Vec3;
+	inv_direction: Vec3;
+	constructor(origin: Vec3, direction: Vec3) {
 		this.origin = origin;
 		this.direction = vec3.normalize(vec3.create(), direction);
 		this.inv_direction = [1, 1, 1];
@@ -20,11 +21,11 @@ export class Ray {
 }
 
 export class RayHit {
-	position: vec3;
+	position: Vec3;
 	voxel_position: number[];
 	voxel: Voxel;
-	normal: vec3;
-	constructor(position: vec3, voxel_position: number[], voxel: Voxel, normal: vec3) {
+	normal: Vec3;
+	constructor(position: Vec3, voxel_position: number[], voxel: Voxel, normal: Vec3) {
 		this.position = position;
 		this.voxel_position = voxel_position;
 		this.voxel = voxel;
@@ -33,7 +34,7 @@ export class RayHit {
 }
 
 export class Voxel {
-	color: vec3 = vec3.create();
+	color: Vec3 = vec3.create();
 	opacity: number = 0.0;
 	roughness: number = 1.0;
 	lightness: number = 0.0;
@@ -42,16 +43,16 @@ export class Voxel {
 export class Scene {
 	camera: FPCamera;
 	grid: Voxel[];
-	boundary_min: vec3;
-	boundary_max: vec3;
+	boundary_min: Vec3;
+	boundary_max: Vec3;
 	grid_size: number = 8;
 	voxel_count: number = 16;
 	voxel_size: number;
-	direct_light: vec3;
+	direct_light: Vec3;
 	direct_light_brightness: number;
 
-	constructor(camera: FPCamera) {
-		this.camera = camera;
+	constructor(controller: Controller) {
+		this.camera = controller.camera;
 		this.grid = new Array<Voxel>(this.grid_size * this.grid_size * this.grid_size);
 		this.boundary_min = [
 			-this.grid_size / 2,
@@ -96,7 +97,7 @@ export class Scene {
 						voxel.lightness = 0;
 						voxel.roughness = 1;
 					}
-					if (vec3.dist([x, y, z], [this.voxel_count / 2, this.voxel_count / 2, this.voxel_count / 2]) > 8) {
+					if (vec3.dist([x + 1, y + 1, z], [this.voxel_count / 2, this.voxel_count / 2, this.voxel_count / 2]) > 7) {
 						voxel.opacity = 1;
 						voxel.color = [x / 4, y / 4, z / 4];
 						// voxel.color = [0.8, 0.8, 0.8];
@@ -109,7 +110,19 @@ export class Scene {
 						voxel.roughness = 0.2;
 						voxel.lightness = 0;
 					}
+					if (x === 5 && y === 5 && z === 5 ||
+						x === 5 && y === 10 && z === 5
+					) {
+						voxel.color = [0.8, 0.5, 0.4];
+						voxel.opacity = 1;
+						voxel.roughness = 1;
+						voxel.lightness = 1;
+					}
 					//voxel.color = [0.8, 0.8, 0.8];
+					voxel.color[0] = Math.min(1, voxel.color[0]);
+					voxel.color[1] = Math.min(1, voxel.color[1]);
+					voxel.color[2] = Math.min(1, voxel.color[2]);
+					//voxel.roughness = 1;
 					this.set_voxel_comp(voxel, x, y, z);
 				}
 			}
@@ -131,8 +144,8 @@ export class Scene {
 			return undefined;
 		}
 
-		const ray_entry = vec3.add(vec3.create(), ray.origin, vec3.scale(vec3.create(), ray.direction, tmin));
-		const ray_exit = vec3.add(vec3.create(), ray.origin, vec3.scale(vec3.create(), ray.direction, tmax));
+		const ray_entry = vec3.add(ray.origin, vec3.scale(ray.direction, tmin));
+		const ray_exit = vec3.add(ray.origin, vec3.scale(ray.direction, tmax));
 		let voxel = [
 			Math.max(0, Math.min(this.voxel_count - 1, Math.floor((ray_entry[0] - this.boundary_min[0]) / this.voxel_size))),
 			Math.max(0, Math.min(this.voxel_count - 1, Math.floor((ray_entry[1] - this.boundary_min[1]) / this.voxel_size))),
@@ -154,7 +167,7 @@ export class Scene {
 		let tdelta = [0, 0, 0];
 		let end_voxel = [0, 0, 0];
 		let thit = tmin;
-		let hit_normal: vec3 = [0, 0, 0];
+		let hit_normal: Vec3 = [0, 0, 0];
 
 		for (let d = 0; d < 3; d++) {
 			end_voxel[d] = Math.max(0, Math.min(this.voxel_count - 1, Math.floor((ray_exit[d] - this.boundary_min[d]) / this.voxel_size)));
@@ -187,7 +200,7 @@ export class Scene {
 			// console.log(tdelta);
 
 			if (this.get_voxel(voxel).opacity > 0.01) {
-				const hit_position = vec3.add(vec3.create(), ray.origin, vec3.scale(vec3.create(), ray.direction, thit));
+				const hit_position = vec3.add(ray.origin, vec3.scale(ray.direction, thit));
 				return new RayHit(hit_position, voxel, this.get_voxel(voxel), hit_normal);
 			}
 
