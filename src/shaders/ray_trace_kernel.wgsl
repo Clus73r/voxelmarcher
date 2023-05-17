@@ -18,7 +18,6 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 			curr_ray = ray_reflect(curr_ray, hit.position, hit.normal);
 			hits++;
 			if (hit.voxel.roughness > 0.99){
-				//return vec3<f32>(1);
 				break;
 			}
 		} else {

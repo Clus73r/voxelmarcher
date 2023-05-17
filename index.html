@@ -11,20 +11,25 @@
     <link href="styles.css" rel="stylesheet" type="text/css" />
     <h1 class="heading">owoxls</h1>
 
-    <div class="btn-container">
+    <!-- <div class="btn-container">
       <label class="switch btn-renderer">
-        <input type="checkbox" name="renderer" id="renderer" value="1">
-        <label for="renderer" data-on="Pathtracing" data-off="Raytracing" class="btn-renderer-inner"></label>
+        <input type="checkbox" name="renderer" id="renderer" value="1" />
+        <label
+          for="renderer"
+          data-on="Pathtracing"
+          data-off="Raytracing"
+          class="btn-renderer-inner"
+        ></label>
       </label>
-    </div>
+    </div> -->
 
     <div class="main">
-      <canvas id="canv" class="layered" width="1024" height="1024"></canvas>
+      <canvas id="canv" class="layered" width="512" height="512"></canvas>
       <div id="canv-overlay" class="layered"></div>
     </div>
-    <div class="section" id="palette">
+    <!-- <div class="section" id="palette">
       <button class="palette-button"><div class="palette-inner"></div></button>
-    </div>
+    </div> -->
     <p id="fps"></p>
 
     <script src="./dist/main.js"></script>
