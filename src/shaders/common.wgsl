@@ -18,10 +18,13 @@ var<private> rng_seed_steady: u32;
 
 const samples: i32 = 1;
 const light_bounces: i32 = 6;
+const max_penetrations: i32 = 5;
 const reflection_bounces: i32 = 5;
 const scatter: i32 = 5;
 const ambient_light: f32 = 0.03;
 const pi = 3.14159265359;
+
+const background: vec3<f32> = vec3<f32>(24f / 255f, 24f / 255f, 37f / 255f);
 
 struct SceneParameter {
     camera_pos: vec3<f32>,
@@ -67,6 +70,7 @@ struct RayHit {
 	voxel: Voxel,
 	normal: vec3<f32>,
 	ray_direction: vec3<f32>,
+	exit_position: vec3<f32>,
 }
 
 @compute @workgroup_size(16,16,1)

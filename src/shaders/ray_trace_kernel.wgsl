@@ -1,5 +1,10 @@
-const ao_samples: i32 = 5;
+const ao_samples: i32 = 15;
 const ao_range: f32 = 0.5;
+
+struct penetration {
+	color: vec3<f32>,
+	opacity: f32,
+}
 
 fn gamma_correct(color: vec3<f32>) -> vec3<f32> {
     return color / f32(samples);
@@ -9,48 +14,77 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 	var hit: RayHit;
 	var bounces: array<RayHit, reflection_bounces>;
 	var curr_ray = ray;
-	var color = vec3<f32>(0.0);
 	var hits: i32 = 0;
+	var has_next_ray = true;
+	var penetrations: array<penetration, max_penetrations>;
+	var penetration_count = 0;
 
-	for (var i = 0; i < reflection_bounces; i++){
-		if(voxel_ray_any(curr_ray, 0.001, &hit)){
-			bounces[i] = hit;
-			curr_ray = ray_reflect(curr_ray, hit.position, hit.normal);
-			hits++;
-			if (hit.voxel.roughness > 0.99){
+	for (var p = 0; p < max_penetrations; p++){
+		var color = vec3<f32>(0.0);
+		var first_hit: RayHit;
+		for (var i = 0; i < reflection_bounces; i++){
+			if(voxel_ray_any(curr_ray, 0.001, &hit)){
+				bounces[i] = hit;
+				curr_ray = ray_reflect(curr_ray, hit.position, hit.normal);
+				hits++;
+				if (i == 0){
+					first_hit = hit;
+				}
+				if (hit.voxel.roughness > 0.99){
+					break;
+				}
+			} else {
 				break;
 			}
-		} else {
+		}
+		if (hits == 0){
+			break;
+			return background;
+			return ray.direction;
+		}
+
+		for (var i: i32 = hits; i >= 0; i--){
+			let t = bounces[i].voxel.roughness;
+			color = color * (1 - t) + t * bounces[i].voxel.color * illumination(bounces[i].position);
+			color *= (1 - get_point_ao(bounces[i].position));
+			
+			for (var l: i32 = 0; l < i32(scene.light_count); l++){
+				let light = lights.data[l];
+				if i32(light.emitter_type) == 0 {
+					let light_voxel = get_voxel(vec3<i32>(light.location));
+					let light_voxel_location = light.location * voxel_size + boundary_min;
+					let light_voxel_location_top = light_voxel_location + voxel_size;
+					let light_voxel_location_mid = (light_voxel_location + light_voxel_location_top) / 2;
+					let lray_dir = light_voxel_location_mid - bounces[i].position;
+					let lray = Ray(bounces[i].position, lray_dir, 1 / lray_dir);
+					var lhit: RayHit;
+					if (voxel_ray_any(lray, 0.001, &lhit) && all(lhit.voxel_position == vec3<i32>(light.location))){
+						let dist = distance(light_voxel_location_mid, bounces[i].position);
+						let intensity = 1 / pow(dist, 2) * lhit.voxel.lightness;
+						color += light_voxel.color * vec3<f32>(intensity) * bounces[i].voxel.color;
+					}
+				}
+			}
+		}
+		penetrations[p] = penetration(color, first_hit.voxel.opacity);
+		penetration_count++;
+		curr_ray = Ray(first_hit.exit_position, ray.direction, ray.inv_direction);
+		if (first_hit.voxel.opacity > 0.99){
 			break;
 		}
 	}
 
-	if (hits == 0){
-		return vec3<f32>(24f / 255f, 24f / 255f, 37f / 255f);
-		return ray.direction;
+	if (penetration_count == 0){
+		return background;
 	}
 
-	for (var i: i32 = hits; i >= 0; i--){
-		let t = bounces[i].voxel.roughness;
-		color = color * (1 - t) + t * bounces[i].voxel.color * illumination(bounces[i].position);
-		color *= (1 - get_point_ao(bounces[i].position));
-		
-		for (var l: i32 = 0; l < i32(scene.light_count); l++){
-			let light = lights.data[l]; // STHET NOCH AUF 1
-			if i32(light.emitter_type) == 0 {
-				let light_voxel = get_voxel(vec3<i32>(light.location));
-				// return (vec3<f32>(light.location) * voxel_size - boundary_min) / grid_size;
-				let light_voxel_location = light.location * voxel_size + boundary_min;
-				let light_voxel_location_top = light_voxel_location + voxel_size;
-				let light_voxel_location_mid = (light_voxel_location + light_voxel_location_top) / 2;
-				let dist = distance(light_voxel_location_mid, bounces[i].position);
-				let intensity = 1 / pow(dist, 2);
-				color += light_voxel.color * vec3<f32>(intensity);
-			}
-		}
+	var color = penetrations[penetration_count].color;
+	for (var i: i32 = penetration_count - 1; i >= 0; i--){
+		color = penetrations[i].color * penetrations[i].opacity + color * (1 - penetrations[i].opacity);
 	}
 
 	return color;
+	// return color;
 }
 
 fn illumination(p: vec3<f32>) -> f32 {
@@ -96,6 +130,13 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 			(*hit).depth = 1 - (thit - depth_clip_min) / (depth_clip_max - depth_clip_min);
 			(*hit).normal = hit_normal;
 			(*hit).ray_direction = ray.direction;
+			if (tmax_comp.x < tmax_comp.y && tmax_comp.x < tmax_comp.z) {
+				(*hit).exit_position = ray.origin + ray.direction * tmax_comp.x;
+			} else if (tmax_comp.y < tmax_comp.z){
+				(*hit).exit_position = ray.origin + ray.direction * tmax_comp.y;
+			} else {
+				(*hit).exit_position = ray.origin + ray.direction * tmax_comp.z;
+			}
 			return true;
 		}
 

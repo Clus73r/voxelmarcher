@@ -24,6 +24,7 @@ let camera_active = false;
 //   renderer.shutdown();
 //   renderer.initialize((<HTMLInputElement>e.target).checked);
 // });
+// 
 
 requestAnimationFrame(function tick() {
   renderer.render();
