@@ -3,6 +3,7 @@ const ao_range: f32 = 0.5;
 
 struct penetration {
 	color: vec3<f32>,
+	ao: f32,
 	opacity: f32,
 }
 
@@ -10,7 +11,7 @@ fn gamma_correct(color: vec3<f32>) -> vec3<f32> {
     return color / f32(samples);
 }
 
-fn trace(ray: Ray, depth: i32) -> vec3<f32> {
+fn trace(ray: Ray, depth: i32) -> TraceResult {
 	var hit: RayHit;
 	var bounces: array<RayHit, reflection_bounces>;
 	var curr_ray = ray;
@@ -21,6 +22,7 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 
 	for (var p = 0; p < max_penetrations; p++){
 		var color = vec3<f32>(0.0);
+		var ao = 0f;
 		var first_hit: RayHit;
 		for (var i = 0; i < reflection_bounces; i++){
 			if(voxel_ray_any(curr_ray, 0.001, &hit)){
@@ -39,14 +41,17 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 		}
 		if (hits == 0){
 			break;
-			return background;
-			return ray.direction;
+			// return background;
+			// return ray.direction;
 		}
 
 		for (var i: i32 = hits; i >= 0; i--){
 			let t = bounces[i].voxel.roughness;
 			color = color * (1 - t) + t * bounces[i].voxel.color * illumination(bounces[i].position);
-			color *= (1 - get_point_ao(bounces[i].position));
+			// color *= (1 - get_point_ao(bounces[i].position));
+			if (i == 0){
+				ao = get_point_ao(bounces[0].position);
+			}
 			
 			for (var l: i32 = 0; l < i32(scene.light_count); l++){
 				let light = lights.data[l];
@@ -66,7 +71,7 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 				}
 			}
 		}
-		penetrations[p] = penetration(color, first_hit.voxel.opacity);
+		penetrations[p] = penetration(color, ao, first_hit.voxel.opacity);
 		penetration_count++;
 		curr_ray = Ray(first_hit.exit_position, ray.direction, ray.inv_direction);
 		if (first_hit.voxel.opacity > 0.99){
@@ -75,15 +80,17 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 	}
 
 	if (penetration_count == 0){
-		return background;
+		return TraceResult(background, 0);
 	}
 
 	var color = penetrations[penetration_count].color;
+	var ao = penetrations[penetration_count].ao;
 	for (var i: i32 = penetration_count - 1; i >= 0; i--){
 		color = penetrations[i].color * penetrations[i].opacity + color * (1 - penetrations[i].opacity);
+		ao = penetrations[i].ao * penetrations[i].opacity + ao * (1 - penetrations[i].opacity);
 	}
 
-	return color;
+	return TraceResult(color, ao);
 	// return color;
 }
 

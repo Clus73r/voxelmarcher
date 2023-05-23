@@ -4,6 +4,7 @@
 // @group(0) @binding(3) var hdr_tex: texture_2d<f32>;
 // @group(0) @binding(4) var hdr_sampler: sampler;
 @group(0) @binding(3) var<storage, read> lights: LightData;
+@group(0) @binding(4) var secondary_buffer: texture_storage_2d<rgba8unorm, write>;
 
 override grid_size: f32 = 2f;
 override voxel_count: i32 = 4;
@@ -73,6 +74,11 @@ struct RayHit {
 	exit_position: vec3<f32>,
 }
 
+struct TraceResult {
+	color: vec3<f32>,
+	ao: f32,
+}
+
 @compute @workgroup_size(16,16,1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let screen_size: vec2<u32> = textureDimensions(color_buffer);
@@ -82,6 +88,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     rng_seed_steady = GlobalInvocationID.x + 150 + (GlobalInvocationID.y + 75) * (GlobalInvocationID.x + 350) * 1000;
 
     var pixel_color: vec3<f32>;
+    var pixel_ao: f32;
     for (var i = 0; i < samples; i++){
 
 	    let rng_offset: vec2<f32> = select(vec2<f32>(0), vec2<f32>(rng() - 0.5, rng() - 0.5), samples > 1);
@@ -92,17 +99,22 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 			    + horizontal_coefficient * scene.camera_right
 			    + vertical_coefficient * scene.camera_up);
 	    let ray: Ray = Ray(scene.camera_pos, ray_direction, 1 / ray_direction);
-	    pixel_color += trace(ray, light_bounces);
+	    let trace_result = trace(ray, light_bounces);
+	    // pixel_color += trace(ray, light_bounces);
+	    pixel_color += trace_result.color;
+	    pixel_ao += trace_result.ao;
     }
 
     // let correction = 1.0 / f32(samples);
     // pixel_color = sqrt(correction * pixel_color);
 
 	pixel_color /= f32(samples);
+	pixel_ao /= f32(samples);
 
     /* pixel_color = textureSampleLevel(hdr_tex, hdr_sampler, vec2<f32>(f32(GlobalInvocationID.x) / f32(screen_size.x), f32(GlobalInvocationID.y) / f32(screen_size.y) * 2), 0.0).rgb; */
 
     textureStore(color_buffer, screen_pos, vec4<f32>(pixel_color, 1.0));
+    textureStore(secondary_buffer, screen_pos, vec4<f32>(pixel_ao, 0, 0, 1.0));
 }
 
 fn rng_hash(seed: u32) -> u32 {
