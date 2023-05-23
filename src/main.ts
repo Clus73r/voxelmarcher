@@ -10,10 +10,10 @@ const img = <HTMLParagraphElement>document.getElementById("kloppenheim_02");
 //let camera = new FPCamera([-8.0, 0.0, 0.0], 0.0, 50.0);
 const scene = new Scene();
 let controller = new Controller(scene, canvas, 12, 0.0, 0.0);
-let renderer = new Renderer(canvas, scene, controller.camera);
+// let renderer = new Renderer(canvas, scene, controller.camera);
 
 scene.initialize_default_grid();
-renderer.initialize(false);
+// renderer.initialize(false);
 
 let last_time = performance.now();
 
@@ -24,10 +24,10 @@ let camera_active = false;
 //   renderer.shutdown();
 //   renderer.initialize((<HTMLInputElement>e.target).checked);
 // });
-// 
+//
 
 requestAnimationFrame(function tick() {
-  renderer.render();
+  //  renderer.render();
   const elapsed = performance.now() - last_time;
   controller.tick(elapsed / 1000);
   last_time = performance.now();
