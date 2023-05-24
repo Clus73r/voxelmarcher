@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>voxel ray marcher</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
 
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>voxel ray marcher</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-</head>
+  <body>
+    <link href="catpuccin.css" rel="stylesheet" type="text/css" />
+    <link href="styles.css" rel="stylesheet" type="text/css" />
+    <!-- <h1 class="noselect heading">owoxls</h1> -->
 
-<body>
-  <link href="catpuccin.css" rel="stylesheet" type="text/css" />
-  <link href="styles.css" rel="stylesheet" type="text/css" />
-  <!-- <h1 class="noselect heading">owoxls</h1> -->
-
-  <!-- <div class="btn-container">
+    <!-- <div class="btn-container">
       <label class="switch btn-renderer">
         <input type="checkbox" name="renderer" id="renderer" value="1" />
         <label
@@ -24,118 +23,164 @@
         ></label>
       </label>
     </div> -->
-  <section class="noselect main-grid">
-    <div class="main-palette">laskdjaskldj</div>
-    <div class="menu">
-      <button class="menu-button"></button>
-      <button class="menu-button"></button>
-      <button class="menu-button"></button>
-      <button class="menu-button"></button>
-      <button class="menu-button"></button>
-      <button class="menu-button"></button>
-      <button class="menu-button"></button>
-      <button class="menu-button"></button>
-      <button class="menu-button"></button>
-      <button class="menu-button"></button>
-      <button class="menu-button"></button>
-    </div>
-    <!-- <div class="main"> -->
-    <canvas id="canv" width="1024" height="1024"></canvas>
-    <div id="canv-overlay"></div>
-    <!-- </div> -->
-    <div class="tools panel">
-      <div class="tool-panel-container">
-        <div class="tool-selection-container">
-          <div class="tool-section">
-            <span class="tooltip-text tooltip-text-above">Place Voxel</span>
-            <input type="radio" name="tool-buttons" id="tool-place-button" style="
+    <section class="noselect main-grid">
+      <div class="menu menu-left">laskdjaskldj</div>
+      <div class="menu menu-top">
+        <button class="menu-button"></button>
+        <svg
+          class="tool-setting-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M18,4C16.29,4 15.25,4.33 14.65,4.61C13.88,4.23 13,4 12,4C11,4 10.12,4.23 9.35,4.61C8.75,4.33 7.71,4 6,4C3,4 1,12 1,14C1,14.83 2.32,15.59 4.14,15.9C4.78,18.14 7.8,19.85 11.5,20V15.72C10.91,15.35 10,14.68 10,14C10,13 12,13 12,13C12,13 14,13 14,14C14,14.68 13.09,15.35 12.5,15.72V20C16.2,19.85 19.22,18.14 19.86,15.9C21.68,15.59 23,14.83 23,14C23,12 21,4 18,4M4.15,13.87C3.65,13.75 3.26,13.61 3,13.5C3.25,10.73 5.2,6.4 6.05,6C6.59,6 7,6.06 7.37,6.11C5.27,8.42 4.44,12.04 4.15,13.87M9,12A1,1 0 0,1 8,11C8,10.46 8.45,10 9,10A1,1 0 0,1 10,11C10,11.56 9.55,12 9,12M15,12A1,1 0 0,1 14,11C14,10.46 14.45,10 15,10A1,1 0 0,1 16,11C16,11.56 15.55,12 15,12M19.85,13.87C19.56,12.04 18.73,8.42 16.63,6.11C17,6.06 17.41,6 17.95,6C18.8,6.4 20.75,10.73 21,13.5C20.75,13.61 20.36,13.75 19.85,13.87Z"
+          />
+        </svg>
+        <button class="menu-button">button</button>
+        <button class="menu-button"></button>
+        <button class="menu-button"></button>
+      </div>
+      <!-- <div class="main"> -->
+      <canvas id="canv" width="512" height="512"></canvas>
+      <div id="canv-overlay"></div>
+      <!-- </div> -->
+      <div class="menu menu-right panel">
+        <div class="tool-panel-container">
+          <div class="tool-selection-container">
+            <div class="tool-section">
+              <span class="tooltip-text tooltip-text-above">Place Voxel</span>
+              <input
+                type="radio"
+                name="tool-buttons"
+                id="tool-place-button"
+                style="
                   --img: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'%3E%3Cpath d=\'M19.71,8.04L17.37,10.37L13.62,6.62L15.96,4.29C16.35,3.9 17,3.9 17.37,4.29L19.71,6.63C20.1,7 20.1,7.65 19.71,8.04M3,17.25L13.06,7.18L16.81,10.93L6.75,21H3V17.25M16.62,5.04L15.08,6.58L17.42,8.92L18.96,7.38L16.62,5.04M15.36,11L13,8.64L4,17.66V20H6.34L15.36,11Z\' /%3E%3C/svg%3E%0A');
-                " class="tool-button-radio" checked />
-            <!-- <label for="tool-place-button button-icon"></label> -->
-            <!-- <img class="button-icon" src="assets/svg/cube-solid.svg" alt="Place voxel"> -->
-            <!-- <label class="grid-center">hi</label> -->
-          </div>
-          <div class="tool-section">
-            <span class="tooltip-text tooltip-text-above">Replace Voxel</span>
-            <input type="radio" name="tool-buttons" id="tool-replace-button" style="
+                "
+                class="tool-button-radio"
+                checked
+              />
+              <!-- <label for="tool-place-button button-icon"></label> -->
+              <!-- <img class="button-icon" src="assets/svg/cube-solid.svg" alt="Place voxel"> -->
+            </div>
+            <div class="tool-section">
+              <span class="tooltip-text tooltip-text-above">Replace Voxel</span>
+              <input
+                type="radio"
+                name="tool-buttons"
+                id="tool-replace-button"
+                style="
                   --img: url('data:image/svg+xml,%3C%3Fxml version=\'1.0\' encoding=\'UTF-8\' standalone=\'no\'%3F%3E%3C!DOCTYPE svg PUBLIC \'-//W3C//DTD SVG 1.1//EN\' \'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\'%3E%3Csvg width=\'100%25\' height=\'100%25\' viewBox=\'0 0 24 24\' version=\'1.1\' xmlns=\'http://www.w3.org/2000/svg\' xmlns:xlink=\'http://www.w3.org/1999/xlink\' xml:space=\'preserve\' xmlns:serif=\'http://www.serif.com/\' style=\'fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;\'%3E%3Cpath d=\'M18.67,1.995C19.174,1.995 19.678,2.176 20.081,2.579C20.081,2.579 21.415,3.913 21.402,3.901C22.19,4.649 22.209,5.963 21.421,6.751L12.461,15.711C12.068,16.103 11.432,16.103 11.039,15.711L8.289,12.961C7.897,12.568 7.897,11.932 8.289,11.539L17.249,2.579C17.255,2.573 17.261,2.567 17.268,2.561C17.662,2.186 18.157,1.995 18.67,1.995ZM18.67,3C18.41,3 18.16,3.1 17.96,3.29L9,12.25L11.75,15L20.71,6.04C21.1,5.65 21.1,5 20.71,4.63L19.37,3.29C19.17,3.09 18.92,3 18.67,3Z\'/%3E%3Cpath d=\'M7,14C8.66,14 10,15.34 10,17C10,19.21 8.21,21 6,21C4.5,21 2.92,20.22 2,19C2.84,19 4,18.31 4,17C4,15.34 5.34,14 7,14ZM7,15.005C5.896,15.005 5.005,15.896 5.005,17C5.005,18.055 4.505,18.842 3.846,19.345C4.496,19.757 5.26,19.995 6,19.995C7.655,19.995 8.995,18.655 8.995,17C8.995,15.896 8.104,15.005 7,15.005Z\'/%3E%3C/svg%3E');
-                " class="tool-button-radio" />
-            <!-- <label for="tool-replace-button"></label> -->
+                "
+                class="tool-button-radio"
+              />
+              <!-- <label for="tool-replace-button"></label> -->
+            </div>
+            <div class="tool-section">
+              <span class="tooltip-text tooltip-text-above">Remove Voxel</span>
+              <input
+                type="radio"
+                name="tool-buttons"
+                id="tool-remove-button"
+                style="
+                  --img: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'%3E%3Cpath d=\'M18,19C18,20.66 16.66,22 15,22H8C6.34,22 5,20.66 5,19V7H4V4H8.5L9.5,3H13.5L14.5,4H19V7H18V19M6,7V19C6,20.1 6.9,21 8,21H15C16.1,21 17,20.1 17,19V7H6M18,6V5H14L13,4H10L9,5H5V6H18M8,9H9V19H8V9M14,9H15V19H14V9Z\' /%3E%3C/svg%3E%0A');
+                "
+                class="tool-button-radio"
+              />
+              <!-- <label for="tool-remove-button"></label> -->
+            </div>
+          </div>
+          <!-- <label class="tool-text">Color</label> -->
+          <div class="color-wrapper">
+            <!-- <span class="tooltip-text tooltip-text-left">Color</span> -->
+            <input type="color" id="color_value" class="color-pick" />
+            <div class="color-pick-shadow"></div>
           </div>
           <div class="tool-section">
-            <span class="tooltip-text tooltip-text-above">Remove Voxel</span>
-            <input type="radio" name="tool-buttons" id="tool-remove-button" style="
-                  --img: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'%3E%3Cpath d=\'M18,19C18,20.66 16.66,22 15,22H8C6.34,22 5,20.66 5,19V7H4V4H8.5L9.5,3H13.5L14.5,4H19V7H18V19M6,7V19C6,20.1 6.9,21 8,21H15C16.1,21 17,20.1 17,19V7H6M18,6V5H14L13,4H10L9,5H5V6H18M8,9H9V19H8V9M14,9H15V19H14V9Z\' /%3E%3C/svg%3E%0A');
-                " class="tool-button-radio" />
-            <!-- <label for="tool-remove-button"></label> -->
+            <span class="tooltip-text tooltip-text-left">Reflectance</span>
+            <svg
+              class="tool-setting-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              xml:space="preserve"
+              style="
+                fill-rule: evenodd;
+                clip-rule: evenodd;
+                stroke-linejoin: round;
+                stroke-miterlimit: 2;
+              "
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M10.053 5.729a.489.489 0 0 1 .91.249v13.218H3.081a.561.561 0 0 1-.484-.85L10.053 5.73ZM3.814 18.215h6.168V7.778L3.814 18.215ZM13.825 5.729a.489.489 0 0 0-.91.249v13.218h7.882a.561.561 0 0 0 .485-.85C19.84 15.91 15.678 8.866 13.825 5.73Z"
+              />
+              <path
+                d="m13.825 5.729 7.457 12.618a.562.562 0 0 1-.485.849h-7.882V5.978a.488.488 0 0 1 .91-.25Zm.072 2.049v10.437h6.167L13.897 7.778Z"
+              />
+            </svg>
+            <input type="range" id="roughness_value" value="0" />
           </div>
-        </div>
-        <!-- <label class="tool-text">Color</label> -->
-        <div class="color-wrapper">
-          <!-- <span class="tooltip-text tooltip-text-left">Color</span> -->
-          <input type="color" id="color_value" class="color-pick" />
-          <div class="color-pick-shadow"></div>
-        </div>
-        <div class="tool-section">
-          <span class="tooltip-text tooltip-text-left">Reflectance</span>
-          <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="
+          <div class="tool-section">
+            <span class="tooltip-text tooltip-text-left">Luminance</span>
+            <svg
+              class="tool-setting-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M14 20c0 1.1-.9 2-2 2h-1c-1.1 0-2-.9-2-2h1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1h1m1-3c0 1.1-.9 2-2 2h-3c-1.1 0-2-.9-2-2v-2c-1.8-1.18-3-3.2-3-5.5a6.5 6.5 0 1 1 13 0c0 2.3-1.2 4.32-3 5.5v2m-6 0c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-2.6c1.78-.9 3-2.76 3-4.9C17 6.46 14.54 4 11.5 4S6 6.46 6 9.5c0 2.14 1.22 4 3 4.9V17Z"
+              />
+            </svg>
+            <input type="range" id="lightness_value" value="0" />
+          </div>
+          <div class="tool-section">
+            <span class="tooltip-text tooltip-text-left">Opacity</span>
+            <svg
+              class="tool-setting-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              xml:space="preserve"
+              style="
                 fill-rule: evenodd;
                 clip-rule: evenodd;
                 stroke-linejoin: round;
                 stroke-miterlimit: 2;
-              " viewBox="0 0 24 24">
-            <path
-              d="M10.053 5.729a.489.489 0 0 1 .91.249v13.218H3.081a.561.561 0 0 1-.484-.85L10.053 5.73ZM3.814 18.215h6.168V7.778L3.814 18.215ZM13.825 5.729a.489.489 0 0 0-.91.249v13.218h7.882a.561.561 0 0 0 .485-.85C19.84 15.91 15.678 8.866 13.825 5.73Z" />
-            <path
-              d="m13.825 5.729 7.457 12.618a.562.562 0 0 1-.485.849h-7.882V5.978a.488.488 0 0 1 .91-.25Zm.072 2.049v10.437h6.167L13.897 7.778Z" />
-          </svg>
-          <input type="range" id="roughness_value" value="0" />
-        </div>
-        <div class="tool-section">
-          <span class="tooltip-text tooltip-text-left">Luminance</span>
-          <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path
-              d="M14 20c0 1.1-.9 2-2 2h-1c-1.1 0-2-.9-2-2h1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1h1m1-3c0 1.1-.9 2-2 2h-3c-1.1 0-2-.9-2-2v-2c-1.8-1.18-3-3.2-3-5.5a6.5 6.5 0 1 1 13 0c0 2.3-1.2 4.32-3 5.5v2m-6 0c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-2.6c1.78-.9 3-2.76 3-4.9C17 6.46 14.54 4 11.5 4S6 6.46 6 9.5c0 2.14 1.22 4 3 4.9V17Z" />
-          </svg>
-          <input type="range" id="lightness_value" value="0" />
-        </div>
-        <div class="tool-section">
-          <span class="tooltip-text tooltip-text-left">Opacity</span>
-          <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="
-                fill-rule: evenodd;
-                clip-rule: evenodd;
-                stroke-linejoin: round;
-                stroke-miterlimit: 2;
-              " viewBox="0 0 24 24">
-            <path d="M19.142 14.716a7.168 7.168 0 0 1-7.132 6.494 7.167 7.167 0 0 1-7.132-6.494h14.264Z" />
-            <path
-              d="M17.66 8A8.02 8.02 0 0 1 20 13.64c0 2-.78 4.11-2.34 5.67a7.99 7.99 0 0 1-11.32 0C4.78 17.75 4 15.64 4 13.64S4.78 9.56 6.34 8L12 2.35 17.66 8Zm-.729.73L12 3.808 7.069 8.73a6.982 6.982 0 0 0-2.037 4.91c0 1.743.678 3.581 2.038 4.94a6.96 6.96 0 0 0 9.86 0 7.041 7.041 0 0 0 2.038-4.94 6.982 6.982 0 0 0-2.037-4.91Z"
-              style="fill-rule: nonzero" />
-          </svg>
-          <input type="range" id="opacity_value" value="100" />
-        </div>
-        <div class="tool-section button-wrapper">
-          <span class="tooltip-text tooltip-text-below">Reset</span>
-          <button type="button" id="reset_button"></button>
-          <!-- <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5" viewBox="0 0 24 24"><path d="M17.423 6.442c1.623 2.288 2.285 4.377 2.671 7.058" style="fill:none;stroke:#000;stroke-width:1px"/><circle cx="14.523" cy="9.656" r="1.48" transform="matrix(.91815 0 0 .91815 1.637 1.405)"/><path d="M17.423 6.442c1.623 2.288 2.285 4.377 2.671 7.058" style="fill:none;stroke:#000;stroke-width:1px" transform="matrix(-1 0 0 1 24 0)"/><circle cx="14.523" cy="9.656" r="1.48" transform="matrix(-.91815 0 0 .91815 22.363 1.405)"/><path d="M18 4c-1.71 0-2.75.33-3.35.61C13.88 4.23 13 4 12 4s-1.88.23-2.65.61C8.75 4.33 7.71 4 6 4c-3 0-5 8-5 10 0 .83 1.32 1.59 3.14 1.9.64 2.24 3.66 3.95 7.36 4.1v-4.28c-.59-.37-1.5-1.04-1.5-1.72 0-1 2-1 2-1s2 0 2 1c0 .68-.91 1.35-1.5 1.72V20c3.7-.15 6.72-1.86 7.36-4.1C21.68 15.59 23 14.83 23 14c0-2-2-10-5-10Zm0 .969c-1.499 0-2.414.274-2.94.519a.968.968 0 0 1-.839-.009A4.961 4.961 0 0 0 12 4.969c-.838 0-1.576.192-2.221.51a.968.968 0 0 1-.839.009c-.526-.245-1.441-.519-2.94-.519-.359 0-.67.238-.976.554-.45.464-.851 1.116-1.21 1.848-1.138 2.322-1.83 5.434-1.844 6.593a.796.796 0 0 0 .066.085c.09.094.209.181.348.264.474.282 1.145.5 1.919.631a.97.97 0 0 1 .769.69c.202.706.723 1.329 1.439 1.85 1.022.742 2.426 1.261 4.02 1.464v-2.713a5.276 5.276 0 0 1-.912-.815 2.796 2.796 0 0 1-.343-.502A1.973 1.973 0 0 1 9.031 14c0-.668.351-1.167.913-1.494.773-.451 2.056-.475 2.056-.475s1.283.024 2.056.475c.562.327.913.826.913 1.494 0 .481-.213.978-.588 1.42a5.276 5.276 0 0 1-.912.815v2.713c1.594-.203 2.998-.722 4.02-1.464.716-.521 1.237-1.144 1.439-1.85a.97.97 0 0 1 .769-.69c.774-.131 1.445-.349 1.919-.631a1.66 1.66 0 0 0 .348-.264.796.796 0 0 0 .066-.085c-.014-1.159-.706-4.271-1.844-6.593-.359-.732-.76-1.384-1.21-1.848-.287-.297-.578-.524-.909-.551L18 4.969Z"/></svg> -->
-          <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path
-              d="M18,4C16.29,4 15.25,4.33 14.65,4.61C13.88,4.23 13,4 12,4C11,4 10.12,4.23 9.35,4.61C8.75,4.33 7.71,4 6,4C3,4 1,12 1,14C1,14.83 2.32,15.59 4.14,15.9C4.78,18.14 7.8,19.85 11.5,20V15.72C10.91,15.35 10,14.68 10,14C10,13 12,13 12,13C12,13 14,13 14,14C14,14.68 13.09,15.35 12.5,15.72V20C16.2,19.85 19.22,18.14 19.86,15.9C21.68,15.59 23,14.83 23,14C23,12 21,4 18,4M4.15,13.87C3.65,13.75 3.26,13.61 3,13.5C3.25,10.73 5.2,6.4 6.05,6C6.59,6 7,6.06 7.37,6.11C5.27,8.42 4.44,12.04 4.15,13.87M9,12A1,1 0 0,1 8,11C8,10.46 8.45,10 9,10A1,1 0 0,1 10,11C10,11.56 9.55,12 9,12M15,12A1,1 0 0,1 14,11C14,10.46 14.45,10 15,10A1,1 0 0,1 16,11C16,11.56 15.55,12 15,12M19.85,13.87C19.56,12.04 18.73,8.42 16.63,6.11C17,6.06 17.41,6 17.95,6C18.8,6.4 20.75,10.73 21,13.5C20.75,13.61 20.36,13.75 19.85,13.87Z" />
-          </svg>
+              "
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M19.142 14.716a7.168 7.168 0 0 1-7.132 6.494 7.167 7.167 0 0 1-7.132-6.494h14.264Z"
+              />
+              <path
+                d="M17.66 8A8.02 8.02 0 0 1 20 13.64c0 2-.78 4.11-2.34 5.67a7.99 7.99 0 0 1-11.32 0C4.78 17.75 4 15.64 4 13.64S4.78 9.56 6.34 8L12 2.35 17.66 8Zm-.729.73L12 3.808 7.069 8.73a6.982 6.982 0 0 0-2.037 4.91c0 1.743.678 3.581 2.038 4.94a6.96 6.96 0 0 0 9.86 0 7.041 7.041 0 0 0 2.038-4.94 6.982 6.982 0 0 0-2.037-4.91Z"
+                style="fill-rule: nonzero"
+              />
+            </svg>
+            <input type="range" id="opacity_value" value="100" />
+          </div>
+          <div class="tool-section">
+            <span class="tooltip-text tooltip-text-below">Reset</span>
+            <button id="reset_button"></button>
+            <!-- <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5" viewBox="0 0 24 24"><path d="M17.423 6.442c1.623 2.288 2.285 4.377 2.671 7.058" style="fill:none;stroke:#000;stroke-width:1px"/><circle cx="14.523" cy="9.656" r="1.48" transform="matrix(.91815 0 0 .91815 1.637 1.405)"/><path d="M17.423 6.442c1.623 2.288 2.285 4.377 2.671 7.058" style="fill:none;stroke:#000;stroke-width:1px" transform="matrix(-1 0 0 1 24 0)"/><circle cx="14.523" cy="9.656" r="1.48" transform="matrix(-.91815 0 0 .91815 22.363 1.405)"/><path d="M18 4c-1.71 0-2.75.33-3.35.61C13.88 4.23 13 4 12 4s-1.88.23-2.65.61C8.75 4.33 7.71 4 6 4c-3 0-5 8-5 10 0 .83 1.32 1.59 3.14 1.9.64 2.24 3.66 3.95 7.36 4.1v-4.28c-.59-.37-1.5-1.04-1.5-1.72 0-1 2-1 2-1s2 0 2 1c0 .68-.91 1.35-1.5 1.72V20c3.7-.15 6.72-1.86 7.36-4.1C21.68 15.59 23 14.83 23 14c0-2-2-10-5-10Zm0 .969c-1.499 0-2.414.274-2.94.519a.968.968 0 0 1-.839-.009A4.961 4.961 0 0 0 12 4.969c-.838 0-1.576.192-2.221.51a.968.968 0 0 1-.839.009c-.526-.245-1.441-.519-2.94-.519-.359 0-.67.238-.976.554-.45.464-.851 1.116-1.21 1.848-1.138 2.322-1.83 5.434-1.844 6.593a.796.796 0 0 0 .066.085c.09.094.209.181.348.264.474.282 1.145.5 1.919.631a.97.97 0 0 1 .769.69c.202.706.723 1.329 1.439 1.85 1.022.742 2.426 1.261 4.02 1.464v-2.713a5.276 5.276 0 0 1-.912-.815 2.796 2.796 0 0 1-.343-.502A1.973 1.973 0 0 1 9.031 14c0-.668.351-1.167.913-1.494.773-.451 2.056-.475 2.056-.475s1.283.024 2.056.475c.562.327.913.826.913 1.494 0 .481-.213.978-.588 1.42a5.276 5.276 0 0 1-.912.815v2.713c1.594-.203 2.998-.722 4.02-1.464.716-.521 1.237-1.144 1.439-1.85a.97.97 0 0 1 .769-.69c.774-.131 1.445-.349 1.919-.631a1.66 1.66 0 0 0 .348-.264.796.796 0 0 0 .066-.085c-.014-1.159-.706-4.271-1.844-6.593-.359-.732-.76-1.384-1.21-1.848-.287-.297-.578-.524-.909-.551L18 4.969Z"/></svg> -->
+            <svg
+              class="tool-setting-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M18,4C16.29,4 15.25,4.33 14.65,4.61C13.88,4.23 13,4 12,4C11,4 10.12,4.23 9.35,4.61C8.75,4.33 7.71,4 6,4C3,4 1,12 1,14C1,14.83 2.32,15.59 4.14,15.9C4.78,18.14 7.8,19.85 11.5,20V15.72C10.91,15.35 10,14.68 10,14C10,13 12,13 12,13C12,13 14,13 14,14C14,14.68 13.09,15.35 12.5,15.72V20C16.2,19.85 19.22,18.14 19.86,15.9C21.68,15.59 23,14.83 23,14C23,12 21,4 18,4M4.15,13.87C3.65,13.75 3.26,13.61 3,13.5C3.25,10.73 5.2,6.4 6.05,6C6.59,6 7,6.06 7.37,6.11C5.27,8.42 4.44,12.04 4.15,13.87M9,12A1,1 0 0,1 8,11C8,10.46 8.45,10 9,10A1,1 0 0,1 10,11C10,11.56 9.55,12 9,12M15,12A1,1 0 0,1 14,11C14,10.46 14.45,10 15,10A1,1 0 0,1 16,11C16,11.56 15.55,12 15,12M19.85,13.87C19.56,12.04 18.73,8.42 16.63,6.11C17,6.06 17.41,6 17.95,6C18.8,6.4 20.75,10.73 21,13.5C20.75,13.61 20.36,13.75 19.85,13.87Z"
+              />
+            </svg>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
-  <section id="blog-start" class="blog">
-    <h2>Slices</h2>
-    <p>alsdkjaslkdjalksdjalsdjkajd</p>
-  </section>
-  <!-- <div class="section" id="palette">
+    </section>
+    <section id="blog-start" class="blog">
+      <h2>Slices</h2>
+      <p>alsdkjaslkdjalksdjalsdjkajd</p>
+    </section>
+    <!-- <div class="section" id="palette">
       <button class="palette-button"><div class="palette-inner"></div></button>
     </div> -->
-  <p id="fps"></p>
+    <p id="fps"></p>
 
-  <script src="./dist/main.js"></script>
-</body>
-
+    <script src="./dist/main.js"></script>
+  </body>
 </html>
