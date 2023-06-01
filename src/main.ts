@@ -3,6 +3,7 @@ import { Renderer } from "./renderer";
 import { Scene, Voxel } from "./scene";
 import { HDRTexture } from "./hdrtex";
 import { Controller } from "./controller";
+import { switch_latte } from "./theme_switch";
 
 const canvas = <HTMLCanvasElement>document.getElementById("canv");
 const fps = <HTMLParagraphElement>document.getElementById("fps");
@@ -26,6 +27,10 @@ let camera_active = false;
 // });
 //
 
+addEventListener("scroll", () => {
+  document.documentElement.dataset.scroll = window.scrollY.toString();
+});
+
 requestAnimationFrame(function tick() {
   renderer.render();
   const elapsed = performance.now() - last_time;
@@ -39,6 +44,8 @@ requestAnimationFrame(function tick() {
 addEventListener("mousedown", (e) => {
   if (e.button == 2) camera_active = true;
 });
+
+switch_latte();
 
 // addEventListener("mouseup", (e) => {
 // 	if (e.button == 2) camera_active = false;
