@@ -23,13 +23,13 @@
         ></label>
       </label>
     </div> -->
+    <div class="vertical-grid">
     <section class="noselect main-grid">
-      <div class="menu menu-left panel">laskdjaskldj</div>
+      <div class="menu menu-left panel">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Reiciendis repellendus assumenda ratione, tempore, magnam, cupiditate repudiandae ut autem consequatur inventore beatae recusandae vel fuga consectetur asperiores pariatur minus quia laboriosam?</div>
       <div class="menu menu-top panel button-bar">
         <div class="hover-section button-spacer">
-          <span class="tooltip-text tooltip-text-below">Scroll to Blog</span>
-          <a href="#blog" class="link-button"></a>
-          <!-- <button id="menu_rescale_canvas" class="menu-button"></button> -->
+          <span class="tooltip-text tooltip-text-below">Scroll down</span>
+          <a href="#slices" class="link-button"></a>
           <svg
             class="menu-icon"
             xmlns="http://www.w3.org/2000/svg"
@@ -84,7 +84,7 @@
         </div>
         <div class="hover-section button-spacer">
           <span class="tooltip-text tooltip-text-below">Rescale Canvas</span>
-          <button class="menu-button"></button>
+          <button id="menu_rescale_canvas" class="menu-button"></button>
           <svg
             class="menu-icon"
             xmlns="http://www.w3.org/2000/svg"
@@ -107,7 +107,7 @@
         </div>
       </div>
       <!-- <div class="main"> -->
-      <canvas id="canv" width="512" height="512"></canvas>
+      <canvas id="canv" width="1024" height="1024"></canvas>
       <div id="canv-overlay"></div>
       <!-- </div> -->
       <div class="menu menu-right panel">
@@ -236,12 +236,14 @@
         </div>
       </div>
     </section>
-    <section id="blog" class="blog">
-      <div class="blog-wrapper">
+    <section id="slices" class="blog">
+      <div class="slices-wrapper">
         <h2>Slices</h2>
+        <canvas id="slice-canvas" width="256" height="256"></canvas>
         <p>alsdkjaslkdjalksdjalsdjkajd</p>
       </div>
     </section>
+  </div>
     <!-- <div class="section" id="palette">
       <button class="palette-button"><div class="palette-inner"></div></button>
     </div> -->

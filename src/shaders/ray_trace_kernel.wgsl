@@ -36,6 +36,7 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 					break;
 				}
 			} else {
+				color = scene.background_color;
 				break;
 			}
 		}
@@ -80,7 +81,7 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 	}
 
 	if (penetration_count == 0){
-		return TraceResult(background, 0);
+		return TraceResult(scene.background_color, 0);
 	}
 
 	var color = penetrations[penetration_count].color;

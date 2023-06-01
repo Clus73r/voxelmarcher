@@ -25,7 +25,7 @@ const scatter: i32 = 5;
 const ambient_light: f32 = 0.03;
 const pi = 3.14159265359;
 
-const background: vec3<f32> = vec3<f32>(24f / 255f, 24f / 255f, 37f / 255f);
+// const background: vec3<f32> = vec3<f32>(24f / 255f, 24f / 255f, 37f / 255f);
 
 struct SceneParameter {
     camera_pos: vec3<f32>,
@@ -36,6 +36,7 @@ struct SceneParameter {
     camera_up: vec3<f32>,
     direct_light: vec3<f32>,
     direct_light_brightness: f32,
+	background_color: vec3<f32>,
 }
 
 struct Voxel {

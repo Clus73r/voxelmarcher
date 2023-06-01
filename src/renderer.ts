@@ -101,7 +101,7 @@ export class Renderer {
       maxAnisotropy: 1,
     });
     this.sceneParameters = this.device?.createBuffer({
-      size: 80,
+      size: 96,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     const scene_size =
@@ -314,9 +314,13 @@ export class Renderer {
         this.scene.direct_light[1],
         this.scene.direct_light[2],
         this.scene.direct_light_brightness,
+        this.scene.background_color[0],
+        this.scene.background_color[1],
+        this.scene.background_color[2],
+        0.0,
       ]),
       0,
-      20
+      24
     );
 
     const light_data = new Float32Array(4 * lights.length);

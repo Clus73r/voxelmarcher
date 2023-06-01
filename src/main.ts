@@ -3,7 +3,7 @@ import { Renderer } from "./renderer";
 import { Scene, Voxel } from "./scene";
 import { HDRTexture } from "./hdrtex";
 import { Controller } from "./controller";
-import { switch_latte } from "./theme_switch";
+import { switch_latte, switch_mocha } from "./theme_switch";
 
 const canvas = <HTMLCanvasElement>document.getElementById("canv");
 const fps = <HTMLParagraphElement>document.getElementById("fps");
@@ -45,7 +45,33 @@ addEventListener("mousedown", (e) => {
   if (e.button == 2) camera_active = true;
 });
 
-switch_latte();
+let theme = "mocha"
+const btn_switch_theme = document.getElementById("menu_switch_theme")
+btn_switch_theme?.addEventListener("click", (e) => {
+  if (theme === "mocha"){
+    theme = "latte";
+    switch_latte();
+    scene.background_color = [239 / 255, 241 / 255, 245 / 255];
+  } else {
+    theme = "mocha";
+    switch_mocha();
+    scene.background_color = [30 / 255, 30 / 255, 46 / 255];
+  }
+});
+
+scene.background_color = [30 / 255, 30 / 255, 46 / 255];
+
+const btn_rescale_canvas = document.getElementById("menu_rescale_canvas")
+btn_rescale_canvas?.addEventListener("click", (e) => {
+  const root = <HTMLElement>document.querySelector(":root");
+  const scaled = Math.min(window.innerWidth, window.innerHeight) * 0.8;
+  canvas.height = scaled;
+  canvas.width = scaled;
+  renderer.shutdown();
+  renderer.initialize(renderer.pathtracing);
+});
+
+//switch_latte();
 
 // addEventListener("mouseup", (e) => {
 // 	if (e.button == 2) camera_active = false;

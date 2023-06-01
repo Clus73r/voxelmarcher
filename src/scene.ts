@@ -54,6 +54,7 @@ export class Scene {
 	voxel_size: number;
 	direct_light: Vec3;
 	direct_light_brightness: number;
+	background_color: Vec3;
 
 	constructor() {
 		this.grid = new Array<Voxel>(
@@ -71,8 +72,9 @@ export class Scene {
 		];
 		this.voxel_size = this.grid_size / this.voxel_count;
 		this.initialize_grid();
-		this.direct_light = vec3.normalize([1.5, 0.6, 1]);
+		this.direct_light = vec3.normalize([1.5, 0.6, 3]);
 		this.direct_light_brightness = 1;
+		this.background_color = [0, 0, 0];
 	}
 
 	initialize_grid() {
@@ -97,7 +99,8 @@ export class Scene {
 				for (let z = 0; z < this.voxel_count; z++) {
 					let voxel = new Voxel();
 					if (z < 3) {
-						voxel.color = [x / 32, y / 32, 0.6];
+						voxel.color = [x / this.voxel_count, y / this.voxel_count, z / this.voxel_count];
+						vec3.scale(voxel.color, 2, voxel.color);
 						voxel.opacity = 1;
 						voxel.lightness = 0;
 						voxel.roughness = 1;
@@ -109,10 +112,16 @@ export class Scene {
 						) < 5
 					) {
 						voxel.opacity = 1;
-						voxel.color = [0.2, y / 64 + 0.3, z / 64 + 0.3];
+						voxel.color = [0.2, y / this.voxel_count + 0.3, z / this.voxel_count + 0.3];
+						vec3.scale(voxel.color, 2, voxel.color);
 						// voxel.color = [0.8, 0.8, 0.8];
 						voxel.lightness = 0;
 						voxel.roughness = 1;
+					}
+					if (x == this.voxel_count - 2 || y < 2) {
+						voxel.color = [x / this.voxel_count, y / this.voxel_count, z / this.voxel_count];
+						voxel.opacity = 1;
+						voxel.roughness = 0.3;
 					}
 					// if (z < 1) {
 					// 	voxel.opacity = 1;
