@@ -84,8 +84,8 @@ struct TraceResult {
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let screen_size: vec2<u32> = textureDimensions(color_buffer);
     let screen_pos : vec2<i32> = vec2<i32>(i32(GlobalInvocationID.x), i32(GlobalInvocationID.y));
-    rng_seed = GlobalInvocationID.x + 50 + (GlobalInvocationID.y + 50) * (GlobalInvocationID.x + 100) * 1000 * u32(scene.rng_start);
-    // rng_seed = GlobalInvocationID.x + 50 + (GlobalInvocationID.y + 50) * (GlobalInvocationID.x + 100) * 1000;
+    // rng_seed = GlobalInvocationID.x + 50 + (GlobalInvocationID.y + 50) * (GlobalInvocationID.x + 100) * 1000 * u32(scene.rng_start);
+    rng_seed = GlobalInvocationID.x + 50 + (GlobalInvocationID.y + 50) * (GlobalInvocationID.x + 100) * 1000;
     rng_seed_steady = GlobalInvocationID.x + 150 + (GlobalInvocationID.y + 75) * (GlobalInvocationID.x + 350) * 1000;
 
     var pixel_color: vec3<f32>;

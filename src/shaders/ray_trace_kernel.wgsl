@@ -1,5 +1,5 @@
-const ao_samples: i32 = 15;
-const ao_range: f32 = 0.5;
+const ao_samples: i32 = 20;
+const ao_range: f32 = 0.2;
 
 struct penetration {
 	color: vec3<f32>,
@@ -49,9 +49,9 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 		for (var i: i32 = hits; i >= 0; i--){
 			let t = bounces[i].voxel.roughness;
 			color = color * (1 - t) + t * bounces[i].voxel.color * illumination(bounces[i].position);
-			// color *= (1 - get_point_ao(bounces[i].position));
 			if (i == 0){
-				ao = get_point_ao(bounces[0].position);
+				//ao = get_point_ao(bounces[0].position);
+				ao = get_point_ao_lambert(bounces[0].position, bounces[0].normal);
 			}
 			
 			for (var l: i32 = 0; l < i32(scene.light_count); l++){
@@ -167,6 +167,15 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 	}
 
 	return false;
+}
+
+fn get_point_ao_lambert(point: vec3<f32>, normal: vec3<f32>) -> f32 {
+	var ao: f32 = 0.0;
+	for (var i = 0; i < ao_samples; i++) {
+		let sample_point = (random_unit_vector() + normal) * rng() * voxel_size * 0.6 + point ;
+		ao += get_voxel_by_position(sample_point).opacity;
+	}
+	return max(0, ao / f32(ao_samples));
 }
 
 fn get_point_ao(point: vec3<f32>) -> f32 {

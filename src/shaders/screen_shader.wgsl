@@ -33,8 +33,9 @@ fn vert_main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
     return output;
 }
 
-const ao_blur_steps = 9;
-const ao_blur_radius = 0.01f / f32(ao_blur_steps);
+const ao_blur_steps = 7;
+const ao_blur_radius = 0.00f / f32(ao_blur_steps);
+const ao_strength = 1;
 
 @fragment
 fn frag_main(@location(0) TexCoord : vec2<f32>) -> @location(0) vec4<f32> {
@@ -47,6 +48,6 @@ fn frag_main(@location(0) TexCoord : vec2<f32>) -> @location(0) vec4<f32> {
 	}
 	acc /= f32(ao_blur_steps) * f32(ao_blur_steps);
 
-    //return vec4<f32>(acc, acc, acc, 1.0);
-    return textureSample(color_buffer, screen_sampler, TexCoord) * (1 - acc);
+    // return vec4<f32>(acc, acc, acc, 1.0);
+    return textureSample(color_buffer, screen_sampler, TexCoord) * (1 - acc * ao_strength);
 }
