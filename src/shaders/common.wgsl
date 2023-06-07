@@ -5,6 +5,7 @@
 // @group(0) @binding(4) var hdr_sampler: sampler;
 @group(0) @binding(3) var<storage, read> lights: LightData;
 @group(0) @binding(4) var secondary_buffer: texture_storage_2d<rgba8unorm, write>;
+@group(0) @binding(5) var<storage, read> scene_meta_data: SceneMetaData;
 
 override grid_size: f32 = 2f;
 override voxel_count: i32 = 4;
@@ -46,8 +47,17 @@ struct Voxel {
 	lightness: f32,
 }
 
+struct MetaVoxel {
+	gi: vec3<f32>,
+	somethingelse: vec3<f32>
+}
+
 struct SceneData {
 	data: array<Voxel>,
+}
+
+struct SceneMetaData {
+	data: array<MetaVoxel>,
 }
 
 struct LightData {
@@ -73,6 +83,7 @@ struct RayHit {
 	normal: vec3<f32>,
 	ray_direction: vec3<f32>,
 	exit_position: vec3<f32>,
+	ao: f32,
 }
 
 struct TraceResult {
@@ -148,6 +159,10 @@ fn get_voxel_id(v: vec3<i32>) -> i32 {
 
 fn get_voxel(v: vec3<i32>) -> Voxel {
 	return scene_data.data[v.z * voxel_count * voxel_count + v.y * voxel_count + v.x];
+}
+
+fn get_meta_voxel(v: vec3<i32>) -> MetaVoxel {
+	return scene_meta_data.data[v.z * voxel_count * voxel_count + v.y * voxel_count + v.x];
 }
 
 fn get_voxel_by_position(v: vec3<f32>) -> Voxel {

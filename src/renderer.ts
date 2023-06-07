@@ -22,6 +22,7 @@ export class Renderer {
   sceneParameters: GPUBuffer | undefined;
   sceneData: GPUBuffer | undefined;
   lightData: GPUBuffer | undefined;
+  sceneMetaData: GPUBuffer | undefined;
 
   ray_tracing_bind_group: GPUBindGroup | undefined;
   ray_tracing_pipeline: GPUComputePipeline | undefined;
@@ -110,6 +111,10 @@ export class Renderer {
       size: scene_size * 8 * 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
+    this.sceneMetaData = this.device?.createBuffer({
+      size: scene_size * 8 * 4,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    });
     this.lightData = this.device?.createBuffer({
       size: 128 * 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
@@ -171,6 +176,13 @@ export class Renderer {
               viewDimension: "2d",
             },
           },
+          {
+            binding: 5,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "read-only-storage",
+            },
+          },
         ],
       })
     );
@@ -200,6 +212,10 @@ export class Renderer {
         {
           binding: 4,
           resource: <GPUTextureView>this.secondary_buffer_view,
+        },
+        {
+          binding: 5,
+          resource: <GPUBufferBinding>{ buffer: this.sceneMetaData },
         },
       ],
     });
@@ -351,10 +367,30 @@ export class Renderer {
       scene_data[8 * i + 7] = 0;
     }
 
+    const scene_meta_data = new Float32Array(8 * this.scene.grid.length);
+    for (let i = 0; i < this.scene.grid.length; ++i) {
+      scene_meta_data[8 * i] = this.scene.meta_grid[i].gi[0];
+      scene_meta_data[8 * i + 1] = this.scene.meta_grid[i].gi[1];
+      scene_meta_data[8 * i + 2] = this.scene.meta_grid[i].gi[2];
+      scene_meta_data[8 * i + 3] = 0;
+      scene_meta_data[8 * i + 4] = 0;
+      scene_meta_data[8 * i + 5] = 0;
+      scene_meta_data[8 * i + 6] = 0;
+      scene_meta_data[8 * i + 7] = 0;
+    }
+
     this.device?.queue.writeBuffer(
       <GPUBuffer>this.sceneData,
       0,
       scene_data,
+      0,
+      this.scene.grid.length * 8
+    );
+
+    this.device?.queue.writeBuffer(
+      <GPUBuffer>this.sceneMetaData,
+      0,
+      scene_meta_data,
       0,
       this.scene.grid.length * 8
     );

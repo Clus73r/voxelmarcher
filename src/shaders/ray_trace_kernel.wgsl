@@ -71,6 +71,10 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 					}
 				}
 			}
+			
+			let vox = bounces[i].voxel_position;
+			let gi_vox = vox + vec3<i32>(bounces[i].normal);
+			color += get_meta_voxel(gi_vox).gi / 5;
 		}
 		penetrations[p] = penetration(color, ao, first_hit.voxel.opacity);
 		penetration_count++;
@@ -122,9 +126,9 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 	//var end_voxel: vec3<i32> = max(vec3<i32>(0), min(vec3<i32>(voxel_count - 1), vec3<i32>((ray_exit - boundary_min - ray.direction * 0.000001) / f32(voxel_size))));
 
 	let direction_zeros: vec3<bool> = ray.direction == vec3<f32>(0);
-	let step: vec3<i32> = vec3<i32>(sign(ray.direction));
+	let vstep: vec3<i32> = vec3<i32>(sign(ray.direction));
 	let tdelta: vec3<f32> = select(voxel_size / abs(ray.direction), vec3<f32>(tmax), direction_zeros);
-	let voxel_boundary: vec3<f32> = vec3<f32>(voxel + max(vec3<i32>(0), step)) * voxel_size;
+	let voxel_boundary: vec3<f32> = vec3<f32>(voxel + max(vec3<i32>(0), vstep)) * voxel_size;
 	var tmax_comp: vec3<f32> = select(tmin + (boundary_min + voxel_boundary - ray_entry) / ray.direction, vec3<f32>(tmax), direction_zeros);
 	var thit: f32 = tmin;
 	var hit_normal: vec3<f32> = vec3<f32>(0, 0, 0);
@@ -148,25 +152,23 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 			return true;
 		}
 
-		if (tmax_comp.x < tmax_comp.y && tmax_comp.x < tmax_comp.z) {
-			voxel.x += step.x;
-			thit = tmax_comp.x;
-			tmax_comp.x += tdelta.x;
-			hit_normal = vec3<f32>(f32(-step.x), 0, 0);
-		} else if (tmax_comp.y < tmax_comp.z){
-			voxel.y += step.y;
-			thit = tmax_comp.y;
-			tmax_comp.y += tdelta.y;
-			hit_normal = vec3<f32>(0, f32(-step.y), 0);
-		} else {
-			voxel.z += step.z;
-			thit = tmax_comp.z;
-			tmax_comp.z += tdelta.z;
-			hit_normal = vec3<f32>(0, 0, f32(-step.z));
-		}
+		let mask = step(tmax_comp.xyz, tmax_comp.yzx) * step(tmax_comp.xyz, tmax_comp.zxy);
+		voxel += vstep * vec3<i32>(mask);
+		let tmax_masked = vec3<f32>(mask) * tmax_comp;
+		thit = max(tmax_masked.x, max(tmax_masked.y, tmax_masked.z));
+		hit_normal = -(vec3<f32>(vstep) * mask);
+		tmax_comp += mask * tdelta;
 	}
 
 	return false;
+}
+
+fn voxel_ao(pos: vec3<f32>, d1: vec3<f32>, f2: vec3<f32>) -> vec3<f32> {
+	
+}
+
+fn vertex_ao(side: vec2<f32>, float corner) -> f32 {
+	return (side.x + side.y + max(corner, side.x * side.y)) / 3.0;
 }
 
 fn get_point_ao_lambert(point: vec3<f32>, normal: vec3<f32>) -> f32 {

@@ -45,8 +45,13 @@ export class Voxel {
   lightness: number = 0.0;
 }
 
+export class MetaVoxel {
+  gi: Vec3 = vec3.create();
+}
+
 export class Scene {
   grid: Voxel[];
+  meta_grid: MetaVoxel[];
   boundary_min: Vec3;
   boundary_max: Vec3;
   grid_size: number = 8;
@@ -58,6 +63,9 @@ export class Scene {
 
   constructor() {
     this.grid = new Array<Voxel>(
+      this.grid_size * this.grid_size * this.grid_size
+    );
+    this.meta_grid = new Array<MetaVoxel>(
       this.grid_size * this.grid_size * this.grid_size
     );
     this.boundary_min = [
@@ -79,6 +87,7 @@ export class Scene {
 
   initialize_grid() {
     this.grid = new Array(this.voxel_count ** 3);
+    this.meta_grid = new Array(this.voxel_count ** 3);
     for (let x = 0; x < this.voxel_count; x++) {
       for (let y = 0; y < this.voxel_count; y++) {
         for (let z = 0; z < this.voxel_count; z++) {
@@ -88,6 +97,10 @@ export class Scene {
           this.grid[
             z * this.voxel_count * this.voxel_count + y * this.voxel_count + x
           ] = vox;
+          let mvox = new MetaVoxel();
+          this.meta_grid[
+            z * this.voxel_count * this.voxel_count + y * this.voxel_count + x
+          ] = mvox;
         }
       }
     }
@@ -183,6 +196,28 @@ export class Scene {
         }
       }
     }
+    this.calc_gi();
+  }
+
+  calc_gi() {
+    for (let x = 0; x < this.voxel_count; x++)
+      for (let y = 0; y < this.voxel_count; y++)
+        for (let z = 0; z < this.voxel_count; z++) {
+          const ray = new Ray(
+            this.get_voxel_center([x, y, z]),
+            vec3.inverse(this.direct_light)
+          );
+          console.log(ray);
+          const hit = this.ray_any(ray);
+          if (!hit) {
+            this.meta_grid[this.get_voxel_id([x, y, z])].gi = vec3.scale(
+              [1, 1, 1],
+              this.direct_light_brightness
+            );
+          } else {
+            console.log(hit.voxel_position);
+          }
+        }
   }
 
   ray_any(ray: Ray): OptRayHit {
@@ -319,6 +354,14 @@ export class Scene {
     }
 
     return undefined;
+  }
+
+  get_voxel_center(voxel: number[]): Vec3 {
+    return [
+      voxel[0] * this.voxel_size - this.boundary_min[0],
+      voxel[1] * this.voxel_size - this.boundary_min[1],
+      voxel[2] * this.voxel_size - this.boundary_min[2],
+    ];
   }
 
   get_voxel_id_comp(x: number, y: number, z: number): number {
