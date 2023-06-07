@@ -84,6 +84,7 @@ struct RayHit {
 	ray_direction: vec3<f32>,
 	exit_position: vec3<f32>,
 	ao: f32,
+	uv: vec2<f32>,
 }
 
 struct TraceResult {

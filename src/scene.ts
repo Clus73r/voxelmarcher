@@ -207,15 +207,12 @@ export class Scene {
             this.get_voxel_center([x, y, z]),
             vec3.inverse(this.direct_light)
           );
-          console.log(ray);
           const hit = this.ray_any(ray);
           if (!hit) {
             this.meta_grid[this.get_voxel_id([x, y, z])].gi = vec3.scale(
               [1, 1, 1],
               this.direct_light_brightness
             );
-          } else {
-            console.log(hit.voxel_position);
           }
         }
   }

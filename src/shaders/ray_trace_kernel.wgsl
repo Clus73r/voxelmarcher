@@ -26,6 +26,8 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 		var first_hit: RayHit;
 		for (var i = 0; i < reflection_bounces; i++){
 			if(voxel_ray_any(curr_ray, 0.001, &hit)){
+				// return TraceResult(vec3<f32>(hit.uv.x), 0.0);
+				return TraceResult(vec3<f32>(0.1), 0.0);
 				bounces[i] = hit;
 				curr_ray = ray_reflect(curr_ray, hit.position, hit.normal);
 				hits++;
@@ -36,6 +38,7 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 					break;
 				}
 			} else {
+				// return TraceResult(vec3<f32>(0.1), 0.0);
 				color = scene.background_color;
 				break;
 			}
@@ -47,11 +50,17 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 		}
 
 		for (var i: i32 = hits; i >= 0; i--){
+				// return TraceResult(vec3<f32>(0.5), 0.0);
+			// return TraceResult(vec3<f32>(bounces[i].uv.x), 0.0);
 			let t = bounces[i].voxel.roughness;
 			color = color * (1 - t) + t * bounces[i].voxel.color * illumination(bounces[i].position);
 			if (i == 0){
 				//ao = get_point_ao(bounces[0].position);
-				ao = get_point_ao_lambert(bounces[0].position, bounces[0].normal);
+				ao = 0;
+				let nrm = vec3<i32>(bounces[i].normal);
+				let am = voxel_ao(bounces[i].voxel_position + nrm, nrm.zxy, nrm.yzx);
+				// let interp_ao = 
+				// ao = get_point_ao_lambert(bounces[0].position, bounces[0].normal);
 			}
 			
 			for (var l: i32 = 0; l < i32(scene.light_count); l++){
@@ -135,6 +144,7 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 
 	while(all(voxel >= vec3<i32>(0)) && all(voxel < vec3<i32>(voxel_count))) {
 		let hit_voxel = get_voxel(voxel);
+		let mask = step(tmax_comp.xyz, tmax_comp.yzx) * step(tmax_comp.xyz, tmax_comp.zxy);
 		if (hit_voxel.opacity > 0.01 && all(tmax_comp > vec3<f32>(start_tolerance))){
 			(*hit).position = ray.origin + ray.direction * thit;
 			(*hit).voxel = hit_voxel;
@@ -142,17 +152,24 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 			(*hit).depth = 1 - (thit - depth_clip_min) / (depth_clip_max - depth_clip_min);
 			(*hit).normal = hit_normal;
 			(*hit).ray_direction = ray.direction;
-			if (tmax_comp.x < tmax_comp.y && tmax_comp.x < tmax_comp.z) {
-				(*hit).exit_position = ray.origin + ray.direction * tmax_comp.x;
-			} else if (tmax_comp.y < tmax_comp.z){
-				(*hit).exit_position = ray.origin + ray.direction * tmax_comp.y;
-			} else {
-				(*hit).exit_position = ray.origin + ray.direction * tmax_comp.z;
-			}
+			let v_diff = (*hit).position - (vec3<f32>(voxel) * voxel_size - boundary_min);
+			(*hit).uv = vec2<f32>(
+				0.6,
+				// dot(mask * v_diff.yzx, vec3<f32>(voxel_size)) / voxel_size,
+				dot(mask * v_diff.zxy, vec3<f32>(voxel_size)) / voxel_size,
+			);
+			let tmax_masked = vec3<f32>(mask) * tmax_comp;
+			(*hit).exit_position = ray.origin + ray.direction * max(tmax_masked.x, max(tmax_masked.y, tmax_masked.z));
+
+						// if (tmax_comp.x < tmax_comp.y && tmax_comp.x < tmax_comp.z) {
+			// 	(*hit).exit_position = ray.origin + ray.direction * tmax_comp.x;
+			// } else if (tmax_comp.y < tmax_comp.z){
+			// 	(*hit).exit_position = ray.origin + ray.direction * tmax_comp.y;
+			// } else {
+			// 	(*hit).exit_position = ray.origin + ray.direction * tmax_comp.z;
+			// }
 			return true;
 		}
-
-		let mask = step(tmax_comp.xyz, tmax_comp.yzx) * step(tmax_comp.xyz, tmax_comp.zxy);
 		voxel += vstep * vec3<i32>(mask);
 		let tmax_masked = vec3<f32>(mask) * tmax_comp;
 		thit = max(tmax_masked.x, max(tmax_masked.y, tmax_masked.z));
@@ -163,11 +180,19 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 	return false;
 }
 
-fn voxel_ao(pos: vec3<f32>, d1: vec3<f32>, f2: vec3<f32>) -> vec3<f32> {
-	
+fn voxel_ao(pos: vec3<i32>, d1: vec3<i32>, d2: vec3<i32>) -> vec4<f32> {
+	let side = vec4<f32>(get_voxel(pos + d1).opacity, get_voxel(pos + d2).opacity, get_voxel(pos - d1).opacity, get_voxel(pos - d2).opacity);
+	let corner = vec4<f32>(get_voxel(pos + d1 + d2).opacity, get_voxel(pos - d1 + d2).opacity, get_voxel(pos - d1 - d2).opacity, get_voxel(pos + d1 - d2).opacity);
+	let ao = vec4<f32>(
+		vertex_ao(side.xy, corner.x),
+		vertex_ao(side.yz, corner.y),
+		vertex_ao(side.zw, corner.z),
+		vertex_ao(side.wz, corner.w),
+	);
+	return 1.0 - ao;
 }
 
-fn vertex_ao(side: vec2<f32>, float corner) -> f32 {
+fn vertex_ao(side: vec2<f32>, corner: f32) -> f32 {
 	return (side.x + side.y + max(corner, side.x * side.y)) / 3.0;
 }
 
