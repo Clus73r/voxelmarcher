@@ -114,20 +114,21 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 	    let ray: Ray = Ray(scene.camera_pos, ray_direction, 1 / ray_direction);
 	    let trace_result = trace(ray, light_bounces);
 	    // pixel_color += trace(ray, light_bounces);
-	    pixel_color += trace_result.color;
-	    pixel_ao += trace_result.ao;
+	    // pixel_color += trace_result.color;
+	    pixel_color += trace_result;
+	    // pixel_ao += trace_result.ao;
     }
 
     // let correction = 1.0 / f32(samples);
     // pixel_color = sqrt(correction * pixel_color);
 
 	pixel_color /= f32(samples);
-	pixel_ao /= f32(samples);
+	// pixel_ao /= f32(samples);
 
     /* pixel_color = textureSampleLevel(hdr_tex, hdr_sampler, vec2<f32>(f32(GlobalInvocationID.x) / f32(screen_size.x), f32(GlobalInvocationID.y) / f32(screen_size.y) * 2), 0.0).rgb; */
 
     textureStore(color_buffer, screen_pos, vec4<f32>(pixel_color, 1.0));
-    textureStore(secondary_buffer, screen_pos, vec4<f32>(pixel_ao, 0, 0, 1.0));
+    // textureStore(secondary_buffer, screen_pos, vec4<f32>(pixel_ao, 0, 0, 1.0));
 }
 
 fn rng_hash(seed: u32) -> u32 {

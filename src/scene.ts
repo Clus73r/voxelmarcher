@@ -84,6 +84,15 @@ export class Scene {
     this.direct_light_brightness = 1;
     this.background_color = [0, 0, 0];
   }
+  
+  serialize_scene(): string {
+    // console.log(JSON.stringify(this.grid));
+    return JSON.stringify(this.grid);
+  }
+  
+  deserialize_scene(s: string) {
+    this.grid = JSON.parse(s);
+  }
 
   initialize_grid() {
     this.grid = new Array(this.voxel_count ** 3);

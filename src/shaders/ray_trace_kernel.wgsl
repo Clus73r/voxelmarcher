@@ -11,7 +11,7 @@ fn gamma_correct(color: vec3<f32>) -> vec3<f32> {
     return color / f32(samples);
 }
 
-fn trace(ray: Ray, depth: i32) -> TraceResult {
+fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 	var hit: RayHit;
 	var bounces: array<RayHit, reflection_bounces>;
 	var curr_ray = ray;
@@ -27,7 +27,6 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 		for (var i = 0; i < reflection_bounces; i++){
 			if(voxel_ray_any(curr_ray, 0.001, &hit)){
 				// return TraceResult(vec3<f32>(hit.uv.x), 0.0);
-				return TraceResult(vec3<f32>(0.1), 0.0);
 				bounces[i] = hit;
 				curr_ray = ray_reflect(curr_ray, hit.position, hit.normal);
 				hits++;
@@ -48,6 +47,8 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 			// return background;
 			// return ray.direction;
 		}
+		// return vec3<f32>(0.2, 0.4, 0.5);
+		// return vec3<f32>(bounces[0].uv.x, bounces[0].uv.y, 0.0);
 
 		for (var i: i32 = hits; i >= 0; i--){
 				// return TraceResult(vec3<f32>(0.5), 0.0);
@@ -58,7 +59,11 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 				//ao = get_point_ao(bounces[0].position);
 				ao = 0;
 				let nrm = vec3<i32>(bounces[i].normal);
+				let uv = bounces[i].uv;
 				let am = voxel_ao(bounces[i].voxel_position + nrm, nrm.zxy, nrm.yzx);
+				ao = mix(mix(am.z, am.w, uv.x), mix(am.y, am.x, uv.x), uv.y);
+				// return vec3<f32>(uv.x / 10 + interp_ao, uv.y / 10 + interp_ao, interp_ao) / 2;
+				// return vec3<f32>(interp_ao);
 				// let interp_ao = 
 				// ao = get_point_ao_lambert(bounces[0].position, bounces[0].normal);
 			}
@@ -81,9 +86,9 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 				}
 			}
 			
-			let vox = bounces[i].voxel_position;
-			let gi_vox = vox + vec3<i32>(bounces[i].normal);
-			color += get_meta_voxel(gi_vox).gi / 5;
+			// let vox = bounces[i].voxel_position;
+			// let gi_vox = vox + vec3<i32>(bounces[i].normal);
+			// color += get_meta_voxel(gi_vox).gi / 5;
 		}
 		penetrations[p] = penetration(color, ao, first_hit.voxel.opacity);
 		penetration_count++;
@@ -94,7 +99,8 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 	}
 
 	if (penetration_count == 0){
-		return TraceResult(scene.background_color, 0);
+		return scene.background_color;
+		// return TraceResult(scene.background_color, 0);
 	}
 
 	var color = penetrations[penetration_count].color;
@@ -104,8 +110,9 @@ fn trace(ray: Ray, depth: i32) -> TraceResult {
 		ao = penetrations[i].ao * penetrations[i].opacity + ao * (1 - penetrations[i].opacity);
 	}
 
-	return TraceResult(color, ao);
-	// return color;
+	return color * ao;
+	// return TraceResult(color, ao);
+	// return vec3<f32>(ao);
 }
 
 fn illumination(p: vec3<f32>) -> f32 {
@@ -141,10 +148,10 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 	var tmax_comp: vec3<f32> = select(tmin + (boundary_min + voxel_boundary - ray_entry) / ray.direction, vec3<f32>(tmax), direction_zeros);
 	var thit: f32 = tmin;
 	var hit_normal: vec3<f32> = vec3<f32>(0, 0, 0);
+	var mask: vec3<f32>;
 
 	while(all(voxel >= vec3<i32>(0)) && all(voxel < vec3<i32>(voxel_count))) {
 		let hit_voxel = get_voxel(voxel);
-		let mask = step(tmax_comp.xyz, tmax_comp.yzx) * step(tmax_comp.xyz, tmax_comp.zxy);
 		if (hit_voxel.opacity > 0.01 && all(tmax_comp > vec3<f32>(start_tolerance))){
 			(*hit).position = ray.origin + ray.direction * thit;
 			(*hit).voxel = hit_voxel;
@@ -152,13 +159,18 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 			(*hit).depth = 1 - (thit - depth_clip_min) / (depth_clip_max - depth_clip_min);
 			(*hit).normal = hit_normal;
 			(*hit).ray_direction = ray.direction;
-			let v_diff = (*hit).position - (vec3<f32>(voxel) * voxel_size - boundary_min);
+			// let v_diff = (*hit).position - (vec3<f32>(voxel) * voxel_size - boundary_min);
+			let uv = (((*hit).position - boundary_min) - (vec3<f32>(voxel) * voxel_size)) / voxel_size;
+			let uvx = select(vec3<f32>(1) * mask - mask * uv.yzx, mask * uv.yzx, sign(ray.direction) < vec3<f32>(0));
+			let uvy = select(vec3<f32>(1) * mask - mask * uv.zxy, mask * uv.zxy, sign(ray.direction) < vec3<f32>(0));
+			// let uvy = mask * uv.zxy;
 			(*hit).uv = vec2<f32>(
-				0.6,
-				// dot(mask * v_diff.yzx, vec3<f32>(voxel_size)) / voxel_size,
-				dot(mask * v_diff.zxy, vec3<f32>(voxel_size)) / voxel_size,
+				max(uvx.x, max(uvx.y, uvx.z)),
+				max(uvy.x, max(uvy.y, uvy.z)),
+				// dot(mask * v_diff.zxy, vec3<f32>(voxel_size)) / voxel_size,
 			);
-			let tmax_masked = vec3<f32>(mask) * tmax_comp;
+			let next_mask = step(tmax_comp.xyz, tmax_comp.yzx) * step(tmax_comp.xyz, tmax_comp.zxy);
+			let tmax_masked = vec3<f32>(next_mask) * tmax_comp;
 			(*hit).exit_position = ray.origin + ray.direction * max(tmax_masked.x, max(tmax_masked.y, tmax_masked.z));
 
 						// if (tmax_comp.x < tmax_comp.y && tmax_comp.x < tmax_comp.z) {
@@ -170,6 +182,7 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 			// }
 			return true;
 		}
+		mask = step(tmax_comp.xyz, tmax_comp.yzx) * step(tmax_comp.xyz, tmax_comp.zxy);
 		voxel += vstep * vec3<i32>(mask);
 		let tmax_masked = vec3<f32>(mask) * tmax_comp;
 		thit = max(tmax_masked.x, max(tmax_masked.y, tmax_masked.z));
@@ -187,12 +200,14 @@ fn voxel_ao(pos: vec3<i32>, d1: vec3<i32>, d2: vec3<i32>) -> vec4<f32> {
 		vertex_ao(side.xy, corner.x),
 		vertex_ao(side.yz, corner.y),
 		vertex_ao(side.zw, corner.z),
-		vertex_ao(side.wz, corner.w),
+		vertex_ao(side.wx, corner.w),
 	);
-	return 1.0 - ao;
+	return 1.0 - ao * 0.8;
 }
 
 fn vertex_ao(side: vec2<f32>, corner: f32) -> f32 {
+	// return (side.x + side.y) / 2.0;
+	return max(side.x + side.y, max(corner, side.x * side.y)) / 2;
 	return (side.x + side.y + max(corner, side.x * side.y)) / 3.0;
 }
 

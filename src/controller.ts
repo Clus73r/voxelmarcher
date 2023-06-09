@@ -20,6 +20,9 @@ export class Controller {
   selected_lightness: number = 0;
   
   selected_tool: "place" | "replace" | "remove";
+  
+  blub_high: HTMLAudioElement;
+  blub_low: HTMLAudioElement;
 
   constructor(
     scene: Scene,
@@ -35,6 +38,8 @@ export class Controller {
     this.scene = scene;
     this.canvas = canvas;
     this.selected_tool = "place";
+    this.blub_high = <HTMLAudioElement> document.getElementById("blub_high");
+    this.blub_low = <HTMLAudioElement> document.getElementById("blub_low");
   }
 
   tick(delta_time: number) {
@@ -71,6 +76,7 @@ export class Controller {
                 n_voxel.lightness = this.selected_lightness;
                 n_voxel.opacity = this.selected_opacity;
                   this.scene.set_voxel(n_voxel, voxel.voxel_position.map((val, i) => val + (<RayHit>voxel).normal[i]));
+                  this.blub_high.play();
                 break;
               case "replace":
                 let r_voxel = new Voxel();
@@ -79,11 +85,13 @@ export class Controller {
                 r_voxel.lightness = this.selected_lightness;
                 r_voxel.opacity = this.selected_opacity;
                   this.scene.set_voxel(r_voxel, voxel.voxel_position);
+                  this.blub_high.play();
                 break;
               case "remove":
                 let d_voxel = new Voxel();
                 d_voxel.opacity = 0;
                 this.scene.set_voxel(d_voxel, voxel.voxel_position);
+                  this.blub_low.play();
                 break;
             }
           }

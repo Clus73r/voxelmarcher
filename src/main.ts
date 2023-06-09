@@ -35,7 +35,11 @@ let camera_active = false;
 //
 
 addEventListener("scroll", () => {
-  document.documentElement.dataset.scroll = window.scrollY.toString();
+  // console.log(`${window.scrollY} / ${window.innerHeight}`);
+  let t = Math.min(2, window.scrollY / window.innerHeight);
+  // console.log(window.scrollY / window.innerHeight);
+  document.documentElement.style.setProperty("--canv-offset", t.toString());
+  // document.documentElement.dataset.scroll = window.scrollY.toString();
 });
 
 requestAnimationFrame(function tick() {
@@ -71,15 +75,54 @@ btn_switch_theme?.addEventListener("click", (e) => {
 scene.background_color = [30 / 255, 30 / 255, 46 / 255];
 
 const btn_rescale_canvas = document.getElementById("menu_rescale_canvas");
-btn_rescale_canvas?.addEventListener("click", (e) => {
+function rescale() {
   const root = <HTMLElement>document.querySelector(":root");
   const scaled = Math.min(window.innerWidth, window.innerHeight) * 0.8;
+  root.style.setProperty("--canv-x", scaled.toString() + "px");
+  root.style.setProperty("--canv-y", scaled.toString() + "px");
   canvas.height = scaled;
   canvas.width = scaled;
   renderer.shutdown();
   renderer.initialize(renderer.pathtracing);
+}
+
+btn_rescale_canvas?.addEventListener("click", (e) => {
+  rescale();
 });
 
+rescale();
+
+const btn_save_scene = document.getElementById("menu_save_scene");
+function save() {
+  const file = new Blob([scene.serialize_scene()], {type: "text/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(file);
+  a.download = "scene.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+btn_save_scene?.addEventListener("click", e =>{
+  save();
+});
+
+const btn_load_scene = document.getElementById("menu_load_scene");
+function load() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.addEventListener("change", e => {
+    const file = (<FileList>input?.files)[0];
+    const reader = new FileReader();
+    reader.readAsText(file, "UTF-8")
+    reader.addEventListener("load", e => {
+      const content = e.target?.result;
+      scene.deserialize_scene(<string>content);
+    });
+  })
+  input.click();
+}
+btn_load_scene?.addEventListener("click", e => {
+  load();
+});
 //switch_latte();
 
 // addEventListener("mouseup", (e) => {
