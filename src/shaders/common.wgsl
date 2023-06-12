@@ -19,9 +19,9 @@ var<private> rng_seed: u32;
 var<private> rng_seed_steady: u32;
 
 const samples: i32 = 1;
-const light_bounces: i32 = 6;
-const max_penetrations: i32 = 8;
-const reflection_bounces: i32 = 5;
+const light_bounces: i32 = 3;
+const max_penetrations: i32 = 3;
+const reflection_bounces: i32 = 3;
 const scatter: i32 = 5;
 // const ambient_light: f32 = 0.03;
 const pi = 3.14159265359;
