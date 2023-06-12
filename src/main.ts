@@ -116,6 +116,8 @@ function load() {
     reader.addEventListener("load", e => {
       const content = e.target?.result;
       scene.deserialize_scene(<string>content);
+      renderer.shutdown();
+      renderer.initialize(renderer.pathtracing);
     });
   })
   input.click();

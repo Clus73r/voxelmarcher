@@ -20,10 +20,10 @@ var<private> rng_seed_steady: u32;
 
 const samples: i32 = 1;
 const light_bounces: i32 = 6;
-const max_penetrations: i32 = 5;
+const max_penetrations: i32 = 8;
 const reflection_bounces: i32 = 5;
 const scatter: i32 = 5;
-const ambient_light: f32 = 0.03;
+// const ambient_light: f32 = 0.03;
 const pi = 3.14159265359;
 
 // const background: vec3<f32> = vec3<f32>(24f / 255f, 24f / 255f, 37f / 255f);
@@ -34,7 +34,9 @@ struct SceneParameter {
     camera_forward: vec3<f32>,
     light_count: f32,
     camera_right: vec3<f32>,
+	ao_strength: f32,
     camera_up: vec3<f32>,
+	ambient_light: f32,
     direct_light: vec3<f32>,
     direct_light_brightness: f32,
 	background_color: vec3<f32>,

@@ -1,10 +1,7 @@
-const ao_samples: i32 = 20;
-const ao_range: f32 = 0.2;
-
 struct penetration {
 	color: vec3<f32>,
 	ao: f32,
-	opacity: f32,
+	hit: RayHit,
 }
 
 fn gamma_correct(color: vec3<f32>) -> vec3<f32> {
@@ -90,7 +87,7 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 			// let gi_vox = vox + vec3<i32>(bounces[i].normal);
 			// color += get_meta_voxel(gi_vox).gi / 5;
 		}
-		penetrations[p] = penetration(color, ao, first_hit.voxel.opacity);
+		penetrations[p] = penetration(color, ao, first_hit);
 		penetration_count++;
 		curr_ray = Ray(first_hit.exit_position, ray.direction, ray.inv_direction);
 		if (first_hit.voxel.opacity > 0.99){
@@ -103,11 +100,23 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 		// return TraceResult(scene.background_color, 0);
 	}
 
-	var color = penetrations[penetration_count].color;
-	var ao = penetrations[penetration_count].ao;
-	for (var i: i32 = penetration_count - 1; i >= 0; i--){
-		color = penetrations[i].color * penetrations[i].opacity + color * (1 - penetrations[i].opacity);
-		ao = penetrations[i].ao * penetrations[i].opacity + ao * (1 - penetrations[i].opacity);
+	var color = penetrations[penetration_count - 1].color;
+	var ao = penetrations[penetration_count - 1].ao;
+	for (var i: i32 = penetration_count - 2; i >= 0; i--){
+		// if (i > 0 && all(penetrations[i].voxel_color == penetrations[i - 1].voxel_color)) { continue;}
+		let pvoxel = penetrations[i].hit.voxel;
+		let phit = penetrations[i].hit;
+		let pcolor = penetrations[i].color;
+		let pao = penetrations[i].ao;
+		let t = pvoxel.opacity;
+		if (i > 0 && all(penetrations[i - 1].hit.voxel.color == pvoxel.color)) { continue; }
+		color = pcolor * t + (1 - t) * color;
+		ao = pao * t + (1 - t) * ao;
+		// let t = distance(phit.position, phit.exit_position) / voxel_size;
+		// color += pvoxel.color * t / f32(penetration_count);
+		// color = pvoxel.color * t + color * (1 - t);
+		// color = penetrations[i].color * pvoxel.opacity + color * (1 - pvoxel.opacity);
+		// ao = penetrations[i].ao * pvoxel.opacity + ao * (1 - pvoxel.opacity);
 	}
 
 	return color * ao;
@@ -118,9 +127,9 @@ fn trace(ray: Ray, depth: i32) -> vec3<f32> {
 fn illumination(p: vec3<f32>) -> f32 {
 	var hit: RayHit;
 	if (!voxel_ray_any(Ray(p, scene.direct_light, 1 / scene.direct_light), 0.001, &hit)){
-		return scene.direct_light_brightness;
+		return max(scene.direct_light_brightness, scene.ambient_light);
 	}
-	return 0.2;
+	return scene.ambient_light;
 }
 
 fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> bool {
@@ -194,6 +203,7 @@ fn voxel_ray_any(ray: Ray, start_tolerance: f32, hit: ptr<function, RayHit>) -> 
 }
 
 fn voxel_ao(pos: vec3<i32>, d1: vec3<i32>, d2: vec3<i32>) -> vec4<f32> {
+	if (get_voxel(pos).opacity > 0) { return vec4<f32>(1); }
 	let side = vec4<f32>(get_voxel(pos + d1).opacity, get_voxel(pos + d2).opacity, get_voxel(pos - d1).opacity, get_voxel(pos - d2).opacity);
 	let corner = vec4<f32>(get_voxel(pos + d1 + d2).opacity, get_voxel(pos - d1 + d2).opacity, get_voxel(pos - d1 - d2).opacity, get_voxel(pos + d1 - d2).opacity);
 	let ao = vec4<f32>(
@@ -202,29 +212,11 @@ fn voxel_ao(pos: vec3<i32>, d1: vec3<i32>, d2: vec3<i32>) -> vec4<f32> {
 		vertex_ao(side.zw, corner.z),
 		vertex_ao(side.wx, corner.w),
 	);
-	return 1.0 - ao * 0.8;
+	return 1.0 - ao * scene.ao_strength;
 }
 
 fn vertex_ao(side: vec2<f32>, corner: f32) -> f32 {
 	// return (side.x + side.y) / 2.0;
 	return max(side.x + side.y, max(corner, side.x * side.y)) / 2;
 	return (side.x + side.y + max(corner, side.x * side.y)) / 3.0;
-}
-
-fn get_point_ao_lambert(point: vec3<f32>, normal: vec3<f32>) -> f32 {
-	var ao: f32 = 0.0;
-	for (var i = 0; i < ao_samples; i++) {
-		let sample_point = (random_unit_vector() + normal) * rng() * voxel_size * 0.6 + point ;
-		ao += get_voxel_by_position(sample_point).opacity;
-	}
-	return max(0, ao / f32(ao_samples));
-}
-
-fn get_point_ao(point: vec3<f32>) -> f32 {
-	var ao: f32 = 0.0;
-	for (var i = 0; i < ao_samples; i++) {
-		let sample_point = random_unit_vector() * rng() * ao_range + point;
-		ao += get_voxel_by_position(sample_point).opacity;
-	}
-	return max(0, ao / f32(ao_samples) - 0.5);
 }

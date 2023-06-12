@@ -428,7 +428,7 @@ html[data-theme="latte"] .section-wrapper {
 }
 
 .sub-section-panel {
-  display: grid;
+  display: inline-grid;
   border-radius: 0.4rem;
   background-color: var(--ctp-base);
   padding: 1rem;
@@ -483,6 +483,7 @@ html[data-theme="latte"] .section-wrapper {
 
 #canv-overlay {
   box-shadow: inset -0px 0px 20px 20px var(--ctp-base);
+  pointer-events: none;
 }
 
 html[data-theme="latte"] #canv-overlay {

@@ -303,18 +303,27 @@
         </div>
       </section>
       <section id="settings">
-        <div class="settings-both-sections">
+        <div class="settings-both-sections noselect">
           <div class="section-wrapper settings-wrapper">
             <h2>Settings</h2>
             <div class="sub-section-panel">
               <h3>Sun</h3>
               <div class="settings-columns">
                 <span>Strength</span>
-                <input type="range" id="sun_strength" value="100" />
+                <input type="range" id="sun_strength" />
                 <span>Phi</span>
-                <input type="range" id="sun_phi" value="100" />
+                <input type="range" id="sun_phi" max="360" />
                 <span>Theta</span>
-                <input type="range" id="sun_theta" value="100" />
+                <input type="range" id="sun_theta" max="360" />
+              </div>
+            </div>
+            <div class="sub-section-panel">
+              <h3>Ambient</h3>
+              <div class="settings-columns">
+                <span>Light</span>
+                <input type="range" id="ambient_light" value="100" />
+                <span>AO</span>
+                <input type="range" id="ao_strength" value="100" />
               </div>
             </div>
             <p>

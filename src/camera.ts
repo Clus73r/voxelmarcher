@@ -13,6 +13,7 @@ export class FPCamera {
   speed: number;
   inputs: boolean[];
   camera_active: boolean = false;
+  control_active: boolean = false;
 
   constructor(position: Vec3, theta: number, phi: number) {
     this.forward = vec3.create();

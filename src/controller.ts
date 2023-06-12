@@ -9,6 +9,7 @@ export class Controller {
   canvas: HTMLCanvasElement;
   mouse_down: boolean = false;
   mouse_dragged: boolean = false;
+  over_canvas: boolean = false;
 
   last_move: number = 0;
   last_movement: Vec2;
@@ -32,7 +33,6 @@ export class Controller {
     phi: number
   ) {
     this.camera = new OrbitCamera(distance, theta, phi);
-    this.setup();
     this.last_move = performance.now();
     this.last_movement = [0, 0];
     this.scene = scene;
@@ -40,6 +40,7 @@ export class Controller {
     this.selected_tool = "place";
     this.blub_high = <HTMLAudioElement> document.getElementById("blub_high");
     this.blub_low = <HTMLAudioElement> document.getElementById("blub_low");
+    this.setup();
   }
 
   tick(delta_time: number) {
@@ -47,8 +48,14 @@ export class Controller {
   }
 
   setup() {
+    this.canvas.addEventListener("mouseover", e => {
+      this.over_canvas = true;
+    });
+    this.canvas.addEventListener("mouseout", e => {
+      this.over_canvas = false;
+    });
     addEventListener("mousedown", (e) => {
-      if (e.button == 0) {
+      if (this.over_canvas && e.button == 0) {
         this.mouse_down = true;
         this.mouse_dragged = false;
         this.camera.dragged = true;
@@ -57,9 +64,9 @@ export class Controller {
     });
     addEventListener("mouseup", (e) => {
       if (e.button == 0) {
+        if (this.mouse_down) this.camera.velocity = [...this.velocity];
         this.mouse_down = false;
         this.camera.dragged = false;
-        this.camera.velocity = [...this.velocity];
         if (!this.mouse_dragged) {
           const rect = this.canvas.getBoundingClientRect();
           const x = e.clientX - rect.left;
@@ -115,7 +122,7 @@ export class Controller {
     })
 
     document.getElementById("lightness_value")?.addEventListener("input", (e) => {
-      this.selected_lightness = parseInt((<HTMLInputElement>e.target).value) / 100;
+      this.selected_lightness = parseInt((<HTMLInputElement>e.target).value) / 25;
     })
 
     document.getElementById("opacity_value")?.addEventListener("input", (e) => {

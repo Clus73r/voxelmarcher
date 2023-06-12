@@ -1,6 +1,7 @@
 import { Controller } from "./controller";
 import { Vec3, vec3 } from "wgpu-matrix";
 import { OrbitCamera } from "./orbit_camera";
+import { Deg2Rad } from "./math_util";
 
 // const grid_size = 2;
 // const voxel_count = 4;
@@ -54,12 +55,20 @@ export class Scene {
   meta_grid: MetaVoxel[];
   boundary_min: Vec3;
   boundary_max: Vec3;
-  grid_size: number = 8;
-  voxel_count: number = 16;
+  grid_size: number = 9;
+  voxel_count: number = 24;
   voxel_size: number;
   direct_light: Vec3;
   direct_light_brightness: number;
   background_color: Vec3;
+  ao_strength: number = 0.8;
+  ambient_light: number = 0.2;
+  
+  input_direct_light: HTMLInputElement;
+  input_direct_light_phi: HTMLInputElement;
+  input_direct_light_theta: HTMLInputElement;
+  input_ao_strength: HTMLInputElement;
+  input_ambient_light: HTMLInputElement;
 
   constructor() {
     this.grid = new Array<Voxel>(
@@ -83,15 +92,58 @@ export class Scene {
     this.direct_light = vec3.normalize([1.5, 0.6, 3]);
     this.direct_light_brightness = 1;
     this.background_color = [0, 0, 0];
+    
+    this.input_direct_light = <HTMLInputElement>document.getElementById("sun_strength");
+    this.input_direct_light.addEventListener("input", e => {
+      this.direct_light_brightness = parseInt(this.input_direct_light.value) / 50;
+    });
+    this.input_direct_light_phi = <HTMLInputElement>document.getElementById("sun_phi");
+    this.input_direct_light_theta = <HTMLInputElement>document.getElementById("sun_theta");
+    this.input_direct_light_phi.addEventListener("input", e => {
+      this.updateDirectLight(parseInt(this.input_direct_light_phi.value), parseInt(this.input_direct_light_theta.value));
+    });
+    this.input_direct_light_theta.addEventListener("input", e => {
+      this.updateDirectLight(parseInt(this.input_direct_light_phi.value), parseInt(this.input_direct_light_theta.value));
+    });
+    
+    this.input_ao_strength = <HTMLInputElement>document.getElementById("ao_strength");
+    this.input_ao_strength.addEventListener("input", e => {
+      this.ao_strength = parseInt(this.input_ao_strength.value) / 100;
+    });
+
+    this.input_ambient_light = <HTMLInputElement>document.getElementById("ambient_light");
+    this.input_ambient_light.addEventListener("input", e => {
+      this.ambient_light = parseInt(this.input_ambient_light.value) / 100;
+    });
+
+  }
+  
+  updateDirectLight(phi: number, theta: number) {
+    this.direct_light = [
+      Math.cos(Deg2Rad(theta)) * Math.cos(Deg2Rad(phi)),
+      Math.sin(Deg2Rad(theta)) * Math.cos(Deg2Rad(phi)),
+      Math.sin(Deg2Rad(phi)),
+    ];
   }
   
   serialize_scene(): string {
     // console.log(JSON.stringify(this.grid));
-    return JSON.stringify(this.grid);
+    return JSON.stringify(this);
   }
   
   deserialize_scene(s: string) {
-    this.grid = JSON.parse(s);
+    const des = JSON.parse(s);
+    this.grid = des.grid;
+    this.background_color = des.background_color;
+    this.grid_size = this.grid_size;
+    this.boundary_min = des.boundary_min;
+    this.boundary_max = des.boundary_max;
+    this.voxel_count = des.voxel_count;
+    this.direct_light = des.direct_light;
+    this.direct_light_brightness = des.direct_light_brightness;
+    this.input_direct_light.value = (des.direct_light_brightness * 100).toString();
+    this.ao_strength = des.ao_strength;
+    this.ambient_light = des.ambient_light;
   }
 
   initialize_grid() {
