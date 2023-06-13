@@ -86,6 +86,24 @@ p {
   margin-top: 0.8em;
 }
 
+#resources a {
+  background-color: var(--ctp-surface1);
+  color: var(--ctp-text);
+  text-decoration: none;
+  text-align: center;
+  padding: 0.6rem;
+  margin: 0.6rem auto 0.6rem auto;
+  border-style: solid;
+  border-radius: 10px;
+  border-color: var(--ctp-base);
+  display: block;
+  transition: all 0.1s;
+}
+
+#resources a:hover {
+  box-shadow: 0 0 1rem 0 var(--ctp-sapphire);
+}
+
 nav {
   position: fixed;
   bottom: 2em;
@@ -466,7 +484,7 @@ html[data-theme="latte"] .section-wrapper {
   position: absolute;
   inset: 0;
   margin: auto auto auto 30%;
-  width: fit-content;
+  width: 70%;
   height: fit-content;
 }
 
@@ -494,6 +512,8 @@ html[data-theme="latte"] #canv-overlay {
   float: left;
   border-radius: 12px;
   margin: 1.2rem 2rem 1.2rem 0;
+  border-style: solid;
+  border-color: var(--ctp-crust);
 }
 
 #resources > .section-wrapper {

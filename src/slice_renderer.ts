@@ -18,7 +18,7 @@ export class SliceRenderer {
     const slice_input = <HTMLInputElement>(
       document.getElementById("slice-input")
     );
-    slice_input.addEventListener("change", (e) => {
+    slice_input.addEventListener("input", (e) => {
       const slice = Math.floor(
         (parseInt(slice_input.value) / 100) * this.scene.voxel_count
       );

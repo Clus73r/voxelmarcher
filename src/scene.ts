@@ -60,6 +60,8 @@ export class Scene {
   voxel_size: number;
   direct_light: Vec3;
   direct_light_brightness: number;
+  direct_light_phi: number = 0;
+  direct_light_theta: number = 0;
   background_color: Vec3;
   ao_strength: number = 0.8;
   ambient_light: number = 0.2;
@@ -119,6 +121,8 @@ export class Scene {
   }
   
   updateDirectLight(phi: number, theta: number) {
+    this.direct_light_phi = phi;
+    this.direct_light_theta = theta;
     this.direct_light = [
       Math.cos(Deg2Rad(theta)) * Math.cos(Deg2Rad(phi)),
       Math.sin(Deg2Rad(theta)) * Math.cos(Deg2Rad(phi)),
@@ -143,7 +147,13 @@ export class Scene {
     this.direct_light_brightness = des.direct_light_brightness;
     this.input_direct_light.value = (des.direct_light_brightness * 100).toString();
     this.ao_strength = des.ao_strength;
+    this.input_ao_strength.value = (des.ao_strength * 100).toString();
     this.ambient_light = des.ambient_light;
+    this.input_ambient_light.value = (des.ambient_light * 100).toString();
+    this.direct_light_phi = des.direct_light_phi;
+    this.input_direct_light_phi.value = (des.direct_light_phi).toString();
+    this.direct_light_theta = des.direct_light_theta;
+    this.input_direct_light_theta.value = (des.direct_light_theta).toString();
   }
 
   initialize_grid() {
@@ -183,32 +193,32 @@ export class Scene {
             voxel.lightness = 0;
             voxel.roughness = 1;
           }
-          if (
-            vec3.dist(
-              [x, y, z],
-              [this.voxel_count / 2, this.voxel_count / 2, this.voxel_count / 2]
-            ) < 5
-          ) {
-            voxel.opacity = 1;
-            voxel.color = [
-              0.2,
-              y / this.voxel_count + 0.3,
-              z / this.voxel_count + 0.3,
-            ];
-            vec3.scale(voxel.color, 2, voxel.color);
-            // voxel.color = [0.8, 0.8, 0.8];
-            voxel.lightness = 0;
-            voxel.roughness = 1;
-          }
-          if (x == this.voxel_count - 2 || y < 2) {
-            voxel.color = [
-              x / this.voxel_count,
-              y / this.voxel_count,
-              z / this.voxel_count,
-            ];
-            voxel.opacity = 1;
-            voxel.roughness = 0.3;
-          }
+          // if (
+          //   vec3.dist(
+          //     [x, y, z],
+          //     [this.voxel_count / 2, this.voxel_count / 2, this.voxel_count / 2]
+          //   ) < 5
+          // ) {
+          //   voxel.opacity = 1;
+          //   voxel.color = [
+          //     0.2,
+          //     y / this.voxel_count + 0.3,
+          //     z / this.voxel_count + 0.3,
+          //   ];
+          //   vec3.scale(voxel.color, 2, voxel.color);
+          //   // voxel.color = [0.8, 0.8, 0.8];
+          //   voxel.lightness = 0;
+          //   voxel.roughness = 1;
+          // }
+          // if (x == this.voxel_count - 2 || y < 2) {
+          //   voxel.color = [
+          //     x / this.voxel_count,
+          //     y / this.voxel_count,
+          //     z / this.voxel_count,
+          //   ];
+          //   voxel.opacity = 1;
+          //   voxel.roughness = 0.3;
+          // }
           // if (z < 1) {
           // 	voxel.opacity = 1;
           // 	// voxel.color = [0.8, 0.2, 0.3];
