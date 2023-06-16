@@ -53,6 +53,16 @@ body {
   -ms-overflow-style: none;
 }
 
+img {
+  /* display: block; */
+  margin: 1rem;
+  border-radius: 12px;
+  margin: 1.2rem 2rem 1.2rem 0;
+  border-style: solid;
+  border-color: var(--ctp-crust);
+  mix-blend-mode: multiply;
+}
+
 body::-webkit-scrollbar {
   width: 0;
   height: 0;
@@ -247,20 +257,6 @@ html[data-theme="latte"] .panel {
   padding: 0.2em;
 }
 
-.tool-button-radio-new {
-  position: absolute;
-  appearance: none;
-  margin: 0;
-  grid-column: 1;
-  grid-row: 1;
-  height: 3.8em;
-  width: 3.8em;
-  cursor: pointer;
-
-  background-color: var(--ctp-crust);
-  transition: all var(--transition-speed) ease-in-out;
-}
-
 .tool-button-radio {
   appearance: none;
   margin: 0;
@@ -283,11 +279,23 @@ html[data-theme="latte"] .panel {
   transition: all var(--transition-speed) ease-in-out;
 }
 
+html[data-theme="latte"] .tool-button-radio {
+  background-color: var(--ctp-surface0);
+}
+
 .tool-button-radio:checked {
   background-color: var(--ctp-peach);
 }
 
 .tool-button-radio:hover {
+  background-color: var(--ctp-sapphire);
+}
+
+html[data-theme="latte"] .tool-button-radio:checked {
+  background-color: var(--ctp-peach);
+}
+
+html[data-theme="latte"] .tool-button-radio:hover {
   background-color: var(--ctp-sapphire);
 }
 
@@ -347,6 +355,10 @@ input[type="range"] {
   transition: all var(--transition-speed) ease-in-out;
   height: 0.3em;
   overflow: hidden;
+}
+
+html[data-theme="latte"] input[type="range"] {
+  background-color: var(--ctp-surface0);
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -421,6 +433,10 @@ input[type="range"]::-moz-range-thumb {
   transform: translate(-50%, -50%);
   box-shadow: inset 0 0 25px 6px var(--ctp-crust);
   pointer-events: none;
+}
+
+html[data-theme="latte"] .color-pick-shadow {
+  box-shadow: inset 0 0 20px 6px var(--ctp-text);
 }
 
 .section-wrapper {
@@ -520,6 +536,9 @@ html[data-theme="latte"] #canv-overlay {
   margin: auto;
   position: absolute;
   inset: 0;
+  max-width: 600px;
+  /* height: 80%;
+  width: auto; */
 }
 
 #settings {

@@ -138,7 +138,7 @@ export class Scene {
   deserialize_scene(s: string) {
     const des = JSON.parse(s);
     this.grid = des.grid;
-    this.background_color = des.background_color;
+    // this.background_color = des.background_color;
     this.grid_size = this.grid_size;
     this.boundary_min = des.boundary_min;
     this.boundary_max = des.boundary_max;
