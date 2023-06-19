@@ -21,7 +21,6 @@
     </audio>
     <div class="vertical-grid">
       <section id="main" class="noselect main-grid">
-        <div id="canv-placeholder"></div>
         <canvas
           id="canv"
           class="scaling-canv"
@@ -29,6 +28,9 @@
           height="1024"
         ></canvas>
         <div id="canv-overlay" class="scaling-canv"></div>
+        <div id="canv-placeholder">
+          <p id="canv-error">Loading... (make sure to enable JS)</p>
+        </div>
         <div class="menu menu-top panel button-bar">
           <div class="hover-section button-spacer">
             <span class="tooltip-text tooltip-text-below">Save scene</span>

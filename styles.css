@@ -498,6 +498,18 @@ html[data-theme="latte"] .section-wrapper {
   grid-column: 2;
 }
 
+#canv-error {
+  display: block;
+  position: absolute;
+  margin: auto;
+  inset: 0;
+  width: fit-content;
+  max-width: 400px;
+  height: fit-content;
+  font-size: 20pt;
+  text-align: center;
+}
+
 #canv-overlay {
   box-shadow: inset -0px 0px 20px 20px var(--ctp-base);
   pointer-events: none;

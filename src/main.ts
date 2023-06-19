@@ -94,14 +94,14 @@ rescale();
 
 const btn_save_scene = document.getElementById("menu_save_scene");
 function save() {
-  const file = new Blob([scene.serialize_scene()], {type: "text/json"});
+  const file = new Blob([scene.serialize_scene()], { type: "text/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(file);
   a.download = "scene.json";
   a.click();
   URL.revokeObjectURL(a.href);
 }
-btn_save_scene?.addEventListener("click", e =>{
+btn_save_scene?.addEventListener("click", (e) => {
   save();
 });
 
@@ -109,20 +109,20 @@ const btn_load_scene = document.getElementById("menu_load_scene");
 function load() {
   const input = document.createElement("input");
   input.type = "file";
-  input.addEventListener("change", e => {
+  input.addEventListener("change", (e) => {
     const file = (<FileList>input?.files)[0];
     const reader = new FileReader();
-    reader.readAsText(file, "UTF-8")
-    reader.addEventListener("load", e => {
+    reader.readAsText(file, "UTF-8");
+    reader.addEventListener("load", (e) => {
       const content = e.target?.result;
       scene.deserialize_scene(<string>content);
       renderer.shutdown();
       renderer.initialize(renderer.pathtracing);
     });
-  })
+  });
   input.click();
 }
-btn_load_scene?.addEventListener("click", e => {
+btn_load_scene?.addEventListener("click", (e) => {
   load();
 });
 //switch_latte();

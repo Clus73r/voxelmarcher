@@ -67,6 +67,13 @@ export class Renderer {
     this.device = await this.adapter?.requestDevice();
     this.context = <GPUCanvasContext>this.canvas.getContext("webgpu");
     this.format = "bgra8unorm";
+    const err = <HTMLParagraphElement>document.getElementById("canv-error");
+    if (!this.context) {
+      err.textContent =
+        "Sorry, this canvas requires a WebGPU capable browser :(";
+    } else {
+      err.textContent = "";
+    }
     this.context.configure({
       device: this.device,
       format: this.format,
