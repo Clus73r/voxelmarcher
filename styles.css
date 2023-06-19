@@ -73,7 +73,8 @@ html[data-theme="latte"] body {
 }
 
 button {
-  opacity: 0;
+  background-color: transparent;
+  border-style: none;
   position: absolute;
   inset: 0;
   margin: auto;
@@ -119,6 +120,7 @@ nav {
   bottom: 2em;
   left: 50%;
   transform: translate(-50%, 0);
+  z-index: 1;
 }
 
 video {
@@ -298,6 +300,10 @@ html[data-theme="latte"] .panel {
   transition: all var(--transition-speed) ease-in-out;
 }
 
+.tool-button-radio:focus {
+  background-color: var(--ctp-sapphire);
+}
+
 html[data-theme="latte"] .tool-button-radio {
   background-color: var(--ctp-surface0);
 }
@@ -407,6 +413,10 @@ div:hover > .tooltip-text {
   width: 120%;
   height: 120%;
   cursor: pointer;
+}
+
+.color-pick:focus + .color-pick-shadow {
+  box-shadow: inset 0 0 25px 6px var(--ctp-sapphire);
 }
 
 .color-pick-shadow {
