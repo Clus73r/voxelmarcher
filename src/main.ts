@@ -125,7 +125,14 @@ function load() {
 btn_load_scene?.addEventListener("click", (e) => {
   load();
 });
-//switch_latte();
+
+const btn_reset = document.getElementById("menu_reset");
+function reset() {
+  scene.reset();
+}
+btn_reset?.addEventListener("click", (e) => {
+  reset();
+});
 
 // addEventListener("mouseup", (e) => {
 // 	if (e.button == 2) camera_active = false;
