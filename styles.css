@@ -429,6 +429,7 @@ html[data-theme="latte"] .color-pick-shadow {
   margin: 2rem auto 2rem 5rem;
   padding: 2em;
   padding-top: 0.8em;
+  min-width: 600px;
   max-width: 60%;
   height: fit-content;
   background-color: var(--ctp-surface0);
