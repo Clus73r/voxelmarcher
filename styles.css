@@ -521,8 +521,7 @@ html[data-theme="latte"] .sub-section-panel {
       var(--lower)
   );
   width: calc(
-    (1 - min(1, var(--canv-offset))) * var(--canv-x) +
-      min(1, var(--canv-offset)) * var(--w-lower)
+    (min(1, var(--canv-offset))) * var(--w-lower) + (1 - min(1, var(--canv-offset))) * var(--canv-x)
   );
 }
 
