@@ -1,290 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <title>voxel ray marcher</title>
+    <meta charset="utf-8" />
+    <meta name="description" content="A voxel ray tracer" />
+    <meta name="keywords" content="Voxel, Raytracing, Rendering" />
+    <meta name="author" content="me" />
+    <meta name="robots" content="all" />
+    <link href="favicon.ico" rel="shortcut icon" />
+  </head>
 
-<head>
-  <title>voxel ray marcher</title>
-  <meta charset="utf-8" />
-  <meta name="description" content="A voxel ray tracer" />
-  <meta name="keywords" content="Voxel, Raytracing, Rendering" />
-  <meta name="author" content="me" />
-  <meta name="robots" content="all" />
-  <!-- <meta name="viewport" content="width=device-width, initial-scale=1" /> -->
-  <link href="favicon.ico" rel="shortcut icon" />
-</head>
-
-<body>
-  <link href="styles.css" rel="stylesheet" type="text/css" />
-  <audio id="blub_high">
-    <source src="assets/audio/blubhigh.mp3" type="audio/mp3" />
-    <source src="assets/audio/blubhigh.wav" type="audio/wav" />
-    <source src="assets/audio/blubhigh.ogg" type="audio/ogg" />
-  </audio>
-  <audio id="blub_low">
-    <source src="assets/audio/blublow.mp3" type="audio/mp3" />
-    <source src="assets/audio/blublow.wav" type="audio/wav" />
-    <source src="assets/audio/blublow.ogg" type="audio/ogg" />
-  </audio>
-  <nav class="panel button-bar">
-    <ul>
-      <li class="hover-section button-spacer">
-        <a aria-labelledby="tt-back" href="#main" class="menu-button"></a>
-        <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960">
-          <path
-            d="M480-175.386 175.386-480 480-784.614l31.999 31.999-250.308 249.923h522.923v45.384H261.691l250.308 249.923L480-175.386Z" />
-        </svg>
-        <span id="tt-back" class="tooltip-text tooltip-text-below">Back</span>
-      </li>
-      <li class="hover-section button-spacer">
-        <span id="tt-top" class="tooltip-text tooltip-text-below">Top</span>
-        <a aria-labelledby="tt-top" href="#main" class="menu-button"></a>
-        <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="
-              fill-rule: evenodd;
-              clip-rule: evenodd;
-              stroke-linejoin: round;
-              stroke-miterlimit: 2;
-            " viewBox="0 0 24 24">
-          <path
-            d="M3.567 7.044a.499.499 0 0 1 .25-.433l8.133-4.696a.503.503 0 0 1 .501 0l8.133 4.696a.5.5 0 0 1 .25.434v9.391a.499.499 0 0 1-.25.433l-8.133 4.696a.498.498 0 0 1-.5 0l-8.134-4.696a.499.499 0 0 1-.25-.433V7.044Zm9.134 13.222 7.133-4.119V7.91l-7.133 4.119v8.237Zm-.54-9.08 7.173-4.142-7.133-4.119-7.138 4.121 7.098 4.14ZM4.567 7.914v8.233l7.134 4.119v-8.191L4.567 7.914Z" />
-        </svg>
-      </li>
-      <li class="hover-section button-spacer">
-        <span id="tt-settings" class="tooltip-text tooltip-text-below">Settings</span>
-        <a aria-labelledby="tt-settings" href="#settings" class="menu-button"></a>
-        <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960">
-          <path
-            d="M440.463-130.001V-339.23h45.383V-257h344.153v45.384H485.846v81.615h-45.383Zm-310.462-81.615V-257h225.075v45.384H130.001Zm179.692-164.077v-81.615H130.001v-45.384h179.692v-82.846h45.383v209.845h-45.383Zm130.77-81.615v-45.384h389.536v45.384H440.463Zm164.461-163.846v-208.845h45.383v81.615h179.692V-703H650.307v81.846h-45.383ZM130.001-703v-45.384h389.536V-703H130.001Z" />
-        </svg>
-      </li>
-      <li class="hover-section button-spacer">
-        <span id="tt-resources" class="tooltip-text tooltip-text-below">Resources</span>
-        <a aria-labelledby="tt-resources" href="#resources" class="menu-button"></a>
-        <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960">
-          <path
-            d="M484.022-260.463q13.285 0 22.555-9.483 9.269-9.483 9.269-22.769 0-12.901-9.291-22.362-9.291-9.462-22.577-9.462-13.285 0-22.747 9.484-9.461 9.483-9.461 22.384 0 13.286 9.483 22.747t22.769 9.461ZM456.308-398h45.538q.384-24.462 7.654-44.039 7.269-19.576 37.038-44.884 29.846-26.384 42.461-49.846 12.616-23.461 12.616-51.663 0-49.413-32.346-79.875-32.345-30.461-83.654-30.461-44.384 0-78.614 22.769-34.231 22.769-50.462 59.615l41.846 16.153q11.384-26.846 32.423-41.769 21.038-14.923 51.807-14.923 36.693 0 57.308 20.039 20.616 20.038 20.616 49.423 0 21.615-12.231 40.154-12.231 18.538-35.308 38.384-29.23 26-42.961 51.308-13.731 25.308-13.731 59.615Zm23.759 297.999q-78.221 0-147.397-29.92-69.176-29.92-120.989-81.71-51.814-51.791-81.747-120.936-29.933-69.146-29.933-147.366 0-78.836 29.92-148.204 29.92-69.369 81.71-120.682 51.791-51.314 120.936-81.247 69.146-29.933 147.366-29.933 78.836 0 148.204 29.92 69.369 29.92 120.682 81.21 51.314 51.291 81.247 120.629 29.933 69.337 29.933 148.173 0 78.221-29.92 147.397-29.92 69.176-81.21 120.989-51.291 51.814-120.629 81.747-69.337 29.933-148.173 29.933ZM480-145.385q139.692 0 237.154-97.769Q814.615-340.923 814.615-480q0-139.692-97.461-237.154Q619.692-814.615 480-814.615q-139.077 0-236.846 97.461Q145.385-619.692 145.385-480q0 139.077 97.769 236.846T480-145.385ZM480-480Z" />
-        </svg>
-      </li>
-      <li class="hover-section button-spacer">
-        <span id="tt-switch-theme" class="tooltip-text tooltip-text-below">Switch Theme</span>
-        <button aria-labelledby="tt-switch-theme" id="menu_switch_theme" class="menu-button"></button>
-        <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="
-              fill-rule: evenodd;
-              clip-rule: evenodd;
-              stroke-linejoin: round;
-              stroke-miterlimit: 2;
-            " viewBox="0 0 24 24">
-          <path
-            d="M6.762 12.445h-2.46a.444.444 0 0 1 0-.889h2.46a5.146 5.146 0 0 0 0 .889Zm.48-2.68-2.13-1.229a.444.444 0 1 1 .444-.769l2.13 1.23a5.256 5.256 0 0 0-.445.769Zm1.755-2.078-1.23-2.131a.444.444 0 0 1 .77-.444l1.228 2.13a5.218 5.218 0 0 0-.768.445Zm2.56-.925v-2.46a.443.443 0 1 1 .887 0v2.46a5.13 5.13 0 0 0-.888 0Zm2.678.48 1.229-2.13a.445.445 0 0 1 .77.444l-1.231 2.13a5.218 5.218 0 0 0-.768-.445Zm-6.548 7.762-2.131 1.23a.444.444 0 1 1-.444-.77l2.13-1.229c.127.27.275.526.445.769Z" />
-          <path d="M12 3c-4.967 0-9 4.033-9 9s4.033 9 9 9c-2.78-1.321-5.037-4.899-5.037-9S9.22 4.321 12 3Z"
-            style="fill: rgba(0, 0, 0, 0)" transform="scale(-.93972) rotate(47.69 27.636 -28.406)" />
-          <path
-            d="M5.927 17.251c2.535 1.04 6.237.355 8.938-2.104 2.7-2.458 3.73-6.08 2.933-8.701a.478.478 0 0 1 .81-.46c3.319 3.646 3.053 9.302-.593 12.621-3.647 3.32-9.303 3.054-12.622-.592a.477.477 0 0 1 .534-.764ZM7.54 18.62c2.98 2.009 7.056 1.807 9.83-.719a7.986 7.986 0 0 0 1.638-9.72c.03 2.58-1.147 5.53-3.501 7.672-2.354 2.143-5.402 3.038-7.967 2.767Z" />
-          <path
-            d="M9.571 14.794A3.617 3.617 0 0 1 8.242 12c0-2.021 1.684-3.662 3.758-3.662a3.79 3.79 0 0 1 2.942 1.384l-5.371 5.072Z"
-            style="fill: rgba(0, 0, 0, 0)" />
-          <path
-            d="M9.258 15.172A4.108 4.108 0 0 1 7.752 12c0-2.288 1.9-4.153 4.248-4.153 1.345 0 2.544.612 3.321 1.565a.489.489 0 0 1-.043.666l-5.37 5.073a.491.491 0 0 1-.65.021Zm.312-1.052 4.68-4.419A3.31 3.31 0 0 0 12 8.828c-1.8 0-3.268 1.418-3.268 3.172 0 .816.318 1.559.838 2.12Z" />
-        </svg>
-      </li>
-    </ul>
-  </nav>
-  <div class="vertical-grid">
-    <section aria-label="Main voxel view" role="main" id="main" class="noselect main-grid">
-      <canvas id="canv" class="scaling-canv" width="1024" height="1024"></canvas>
-      <div id="canv-overlay" class="scaling-canv"></div>
-      <div id="canv-placeholder">
-        <p id="canv-error">Loading... (make sure to enable JS)</p>
-      </div>
-      <div class="menu menu-top panel button-bar">
-        <div class="hover-section button-spacer">
-          <span id="tt-save" class="tooltip-text tooltip-text-below">Save scene</span>
-          <button aria-labelledby="tt-save" id="menu_save_scene" class="menu-button"></button>
-          <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960">
-            <path
-              d="M237.694-180.001q-23.529 0-40.611-17.082-17.082-17.082-17.082-40.611v-124.537h45.384v124.537q0 4.616 3.846 8.463 3.847 3.846 8.463 3.846h484.612q4.616 0 8.463-3.846 3.846-3.847 3.846-8.463v-124.537h45.384v124.537q0 23.529-17.082 40.611-17.082 17.082-40.611 17.082H237.694ZM480-330.309l-165.69-165.69 32.614-32.23L457.308-418.23v-368.692h45.384v368.692l110.384-109.999 32.614 32.23L480-330.309Z" />
+  <body>
+    <link href="styles.css" rel="stylesheet" type="text/css" />
+    <audio id="blub_high">
+      <source src="assets/audio/blubhigh.mp3" type="audio/mp3" />
+      <source src="assets/audio/blubhigh.wav" type="audio/wav" />
+      <source src="assets/audio/blubhigh.ogg" type="audio/ogg" />
+    </audio>
+    <audio id="blub_low">
+      <source src="assets/audio/blublow.mp3" type="audio/mp3" />
+      <source src="assets/audio/blublow.wav" type="audio/wav" />
+      <source src="assets/audio/blublow.ogg" type="audio/ogg" />
+    </audio>
+    <nav class="panel button-bar">
+      <ul>
+        <li class="hover-section button-spacer">
+          <a aria-labelledby="tt-back" href="#main" class="menu-button"></a>
+          <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" >
+            <path d="M480-175.386 175.386-480 480-784.614l31.999 31.999-250.308 249.923h522.923v45.384H261.691l250.308 249.923L480-175.386Z" />
           </svg>
+          <span id="tt-back" class="tooltip-text tooltip-text-below">Back</span>
+        </li>
+        <li class="hover-section button-spacer">
+          <span id="tt-top" class="tooltip-text tooltip-text-below">Top</span>
+          <a aria-labelledby="tt-top" href="#main" class="menu-button"></a>
+          <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style=" fill-rule: evenodd; clip-rule: evenodd; stroke-linejoin: round; stroke-miterlimit: 2; " viewBox="0 0 24 24" > <path d="M3.567 7.044a.499.499 0 0 1 .25-.433l8.133-4.696a.503.503 0 0 1 .501 0l8.133 4.696a.5.5 0 0 1 .25.434v9.391a.499.499 0 0 1-.25.433l-8.133 4.696a.498.498 0 0 1-.5 0l-8.134-4.696a.499.499 0 0 1-.25-.433V7.044Zm9.134 13.222 7.133-4.119V7.91l-7.133 4.119v8.237Zm-.54-9.08 7.173-4.142-7.133-4.119-7.138 4.121 7.098 4.14ZM4.567 7.914v8.233l7.134 4.119v-8.191L4.567 7.914Z" /> </svg>
+        </li>
+        <li class="hover-section button-spacer">
+          <span id="tt-settings" class="tooltip-text tooltip-text-below" >Settings</span >
+          <a aria-labelledby="tt-settings" href="#settings" class="menu-button" ></a>
+          <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" > <path d="M440.463-130.001V-339.23h45.383V-257h344.153v45.384H485.846v81.615h-45.383Zm-310.462-81.615V-257h225.075v45.384H130.001Zm179.692-164.077v-81.615H130.001v-45.384h179.692v-82.846h45.383v209.845h-45.383Zm130.77-81.615v-45.384h389.536v45.384H440.463Zm164.461-163.846v-208.845h45.383v81.615h179.692V-703H650.307v81.846h-45.383ZM130.001-703v-45.384h389.536V-703H130.001Z" /> </svg>
+        </li>
+        <li class="hover-section button-spacer">
+          <span id="tt-resources" class="tooltip-text tooltip-text-below" >Resources</span >
+          <a aria-labelledby="tt-resources" href="#resources" class="menu-button" ></a>
+          <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" > <path d="M484.022-260.463q13.285 0 22.555-9.483 9.269-9.483 9.269-22.769 0-12.901-9.291-22.362-9.291-9.462-22.577-9.462-13.285 0-22.747 9.484-9.461 9.483-9.461 22.384 0 13.286 9.483 22.747t22.769 9.461ZM456.308-398h45.538q.384-24.462 7.654-44.039 7.269-19.576 37.038-44.884 29.846-26.384 42.461-49.846 12.616-23.461 12.616-51.663 0-49.413-32.346-79.875-32.345-30.461-83.654-30.461-44.384 0-78.614 22.769-34.231 22.769-50.462 59.615l41.846 16.153q11.384-26.846 32.423-41.769 21.038-14.923 51.807-14.923 36.693 0 57.308 20.039 20.616 20.038 20.616 49.423 0 21.615-12.231 40.154-12.231 18.538-35.308 38.384-29.23 26-42.961 51.308-13.731 25.308-13.731 59.615Zm23.759 297.999q-78.221 0-147.397-29.92-69.176-29.92-120.989-81.71-51.814-51.791-81.747-120.936-29.933-69.146-29.933-147.366 0-78.836 29.92-148.204 29.92-69.369 81.71-120.682 51.791-51.314 120.936-81.247 69.146-29.933 147.366-29.933 78.836 0 148.204 29.92 69.369 29.92 120.682 81.21 51.314 51.291 81.247 120.629 29.933 69.337 29.933 148.173 0 78.221-29.92 147.397-29.92 69.176-81.21 120.989-51.291 51.814-120.629 81.747-69.337 29.933-148.173 29.933ZM480-145.385q139.692 0 237.154-97.769Q814.615-340.923 814.615-480q0-139.692-97.461-237.154Q619.692-814.615 480-814.615q-139.077 0-236.846 97.461Q145.385-619.692 145.385-480q0 139.077 97.769 236.846T480-145.385ZM480-480Z" /> </svg>
+        </li>
+        <li class="hover-section button-spacer">
+          <span id="tt-switch-theme" class="tooltip-text tooltip-text-below" >Switch Theme</span >
+          <button aria-labelledby="tt-switch-theme" id="menu_switch_theme" class="menu-button" ></button>
+          <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style=" fill-rule: evenodd; clip-rule: evenodd; stroke-linejoin: round; stroke-miterlimit: 2; " viewBox="0 0 24 24" > <path d="M6.762 12.445h-2.46a.444.444 0 0 1 0-.889h2.46a5.146 5.146 0 0 0 0 .889Zm.48-2.68-2.13-1.229a.444.444 0 1 1 .444-.769l2.13 1.23a5.256 5.256 0 0 0-.445.769Zm1.755-2.078-1.23-2.131a.444.444 0 0 1 .77-.444l1.228 2.13a5.218 5.218 0 0 0-.768.445Zm2.56-.925v-2.46a.443.443 0 1 1 .887 0v2.46a5.13 5.13 0 0 0-.888 0Zm2.678.48 1.229-2.13a.445.445 0 0 1 .77.444l-1.231 2.13a5.218 5.218 0 0 0-.768-.445Zm-6.548 7.762-2.131 1.23a.444.444 0 1 1-.444-.77l2.13-1.229c.127.27.275.526.445.769Z" /> <path d="M12 3c-4.967 0-9 4.033-9 9s4.033 9 9 9c-2.78-1.321-5.037-4.899-5.037-9S9.22 4.321 12 3Z" style="fill: rgba(0, 0, 0, 0)" transform="scale(-.93972) rotate(47.69 27.636 -28.406)" /> <path d="M5.927 17.251c2.535 1.04 6.237.355 8.938-2.104 2.7-2.458 3.73-6.08 2.933-8.701a.478.478 0 0 1 .81-.46c3.319 3.646 3.053 9.302-.593 12.621-3.647 3.32-9.303 3.054-12.622-.592a.477.477 0 0 1 .534-.764ZM7.54 18.62c2.98 2.009 7.056 1.807 9.83-.719a7.986 7.986 0 0 0 1.638-9.72c.03 2.58-1.147 5.53-3.501 7.672-2.354 2.143-5.402 3.038-7.967 2.767Z" /> <path d="M9.571 14.794A3.617 3.617 0 0 1 8.242 12c0-2.021 1.684-3.662 3.758-3.662a3.79 3.79 0 0 1 2.942 1.384l-5.371 5.072Z" style="fill: rgba(0, 0, 0, 0)" /> <path d="M9.258 15.172A4.108 4.108 0 0 1 7.752 12c0-2.288 1.9-4.153 4.248-4.153 1.345 0 2.544.612 3.321 1.565a.489.489 0 0 1-.043.666l-5.37 5.073a.491.491 0 0 1-.65.021Zm.312-1.052 4.68-4.419A3.31 3.31 0 0 0 12 8.828c-1.8 0-3.268 1.418-3.268 3.172 0 .816.318 1.559.838 2.12Z" /> </svg>
+        </li>
+      </ul>
+    </nav>
+    <div class="vertical-grid">
+      <section aria-label="Main voxel view" role="main" id="main" class="noselect main-grid" >
+        <canvas id="canv" class="scaling-canv" width="1024" height="1024" ></canvas>
+        <div id="canv-overlay" class="scaling-canv"></div>
+        <div id="canv-placeholder">
+          <p id="canv-error">Loading... (make sure to enable JS)</p>
         </div>
-        <div class="hover-section button-spacer">
-          <span id="tt-load" class="tooltip-text tooltip-text-below">Load scene</span>
-          <button aria-labelledby="tt-load" id="menu_load_scene" class="menu-button"></button>
-          <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960">
-            <path
-              d="M237.694-180.001q-23.529 0-40.611-17.082-17.082-17.082-17.082-40.611v-124.537h45.384v124.537q0 4.616 3.846 8.463 3.847 3.846 8.463 3.846h484.612q4.616 0 8.463-3.846 3.846-3.847 3.846-8.463v-124.537h45.384v124.537q0 23.529-17.082 40.611-17.082 17.082-40.611 17.082H237.694Zm219.614-150.308v-368.692L346.924-589.002l-32.614-32.23L480-786.922l165.69 165.69-32.614 32.23-110.384-109.999v368.692h-45.384Z" />
-          </svg>
-        </div>
-        <div class="hover-section button-spacer">
-          <span id="tt-rescale" class="tooltip-text tooltip-text-below">Rescale Canvas</span>
-          <button aria-labelledby="tt-rescale" id="menu_rescale_canvas" class="menu-button"></button>
-          <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="
-                fill-rule: evenodd;
-                clip-rule: evenodd;
-                stroke-linejoin: round;
-                stroke-miterlimit: 2;
-              " viewBox="0 0 24 24">
-            <path
-              d="M17.474 7.004v9.992a.477.477 0 0 1-.478.478H7.004a.477.477 0 0 1-.478-.478V7.004c0-.264.214-.478.478-.478h9.992c.264 0 .478.214.478.478Zm-.955.477H7.48v9.038h9.038V7.48Z" />
-            <path
-              d="m7.774 16.946-2.557 2.556a.185.185 0 0 0 .131.316H12a.51.51 0 0 1 0 1.018H3.673a.508.508 0 0 1-.509-.509V12a.51.51 0 0 1 1.018 0v6.652a.185.185 0 0 0 .316.131l2.493-2.494v.657h.783Zm8.455-9.894 2.554-2.554a.185.185 0 0 0-.131-.316H12a.51.51 0 0 1 0-1.018h8.327a.508.508 0 0 1 .509.509V12a.51.51 0 0 1-1.018 0V5.348a.185.185 0 0 0-.316-.131l-2.564 2.564v-.729h-.709Z" />
-          </svg>
-        </div>
-        <div class="hover-section button-spacer">
-          <span id="tt-reset" class="tooltip-text tooltip-text-below">Reset</span>
-          <button aria-labelledby="tt-rescale" id="menu_reset" class="menu-button"></button>
-          <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 -2 26 26">
-            <path
-              d="M18,4C16.29,4 15.25,4.33 14.65,4.61C13.88,4.23 13,4 12,4C11,4 10.12,4.23 9.35,4.61C8.75,4.33 7.71,4 6,4C3,4 1,12 1,14C1,14.83 2.32,15.59 4.14,15.9C4.78,18.14 7.8,19.85 11.5,20V15.72C10.91,15.35 10,14.68 10,14C10,13 12,13 12,13C12,13 14,13 14,14C14,14.68 13.09,15.35 12.5,15.72V20C16.2,19.85 19.22,18.14 19.86,15.9C21.68,15.59 23,14.83 23,14C23,12 21,4 18,4M4.15,13.87C3.65,13.75 3.26,13.61 3,13.5C3.25,10.73 5.2,6.4 6.05,6C6.59,6 7,6.06 7.37,6.11C5.27,8.42 4.44,12.04 4.15,13.87M9,12A1,1 0 0,1 8,11C8,10.46 8.45,10 9,10A1,1 0 0,1 10,11C10,11.56 9.55,12 9,12M15,12A1,1 0 0,1 14,11C14,10.46 14.45,10 15,10A1,1 0 0,1 16,11C16,11.56 15.55,12 15,12M19.85,13.87C19.56,12.04 18.73,8.42 16.63,6.11C17,6.06 17.41,6 17.95,6C18.8,6.4 20.75,10.73 21,13.5C20.75,13.61 20.36,13.75 19.85,13.87Z" />
-          </svg>
-        </div>
-      </div>
-      <div class="menu menu-right panel">
-        <div class="button-bar">
-          <div class="hover-section">
-            <span class="tooltip-text tooltip-text-above">Place Voxel</span>
-            <input type="radio" name="tool-buttons" id="tool-place-button" checked />
-            <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path
-                d="m19.71 8.04-2.34 2.33-3.75-3.75 2.34-2.33c.39-.39 1.04-.39 1.41 0l2.34 2.34c.39.37.39 1.02 0 1.41M3 17.25 13.06 7.18l3.75 3.75L6.75 21H3v-3.75M16.62 5.04l-1.54 1.54 2.34 2.34 1.54-1.54-2.34-2.34M15.36 11 13 8.64l-9 9.02V20h2.34l9.02-9Z" />
-            </svg>
+        <div class="menu menu-top panel button-bar">
+          <div class="hover-section button-spacer">
+            <span id="tt-save" class="tooltip-text tooltip-text-below" >Save scene</span >
+            <button aria-labelledby="tt-save" id="menu_save_scene" class="menu-button" ></button>
+            <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" > <path d="M237.694-180.001q-23.529 0-40.611-17.082-17.082-17.082-17.082-40.611v-124.537h45.384v124.537q0 4.616 3.846 8.463 3.847 3.846 8.463 3.846h484.612q4.616 0 8.463-3.846 3.846-3.847 3.846-8.463v-124.537h45.384v124.537q0 23.529-17.082 40.611-17.082 17.082-40.611 17.082H237.694ZM480-330.309l-165.69-165.69 32.614-32.23L457.308-418.23v-368.692h45.384v368.692l110.384-109.999 32.614 32.23L480-330.309Z" /> </svg>
           </div>
-          <div class="hover-section">
-            <span class="tooltip-text tooltip-text-above">Replace Voxel</span>
-            <input type="radio" name="tool-buttons" id="tool-replace-button" />
-            <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="
-                  fill-rule: evenodd;
-                  clip-rule: evenodd;
-                  stroke-linejoin: round;
-                  stroke-miterlimit: 2;
-                " viewBox="0 0 24 24">
-              <path
-                d="M18.67 1.995c.504 0 1.008.181 1.411.584l1.321 1.322c.788.748.807 2.062.019 2.85l-8.96 8.96a1.007 1.007 0 0 1-1.422 0l-2.75-2.75a1.007 1.007 0 0 1 0-1.422l8.96-8.96a2.016 2.016 0 0 1 1.421-.584Zm0 1.005c-.26 0-.51.1-.71.29L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.04 0-1.41l-1.34-1.34c-.2-.2-.45-.29-.7-.29ZM7 14c1.66 0 3 1.34 3 3 0 2.21-1.79 4-4 4-1.5 0-3.08-.78-4-2 .84 0 2-.69 2-2 0-1.66 1.34-3 3-3Zm0 1.005A1.992 1.992 0 0 0 5.005 17c0 1.055-.5 1.842-1.159 2.345.65.412 1.414.65 2.154.65A2.994 2.994 0 0 0 8.995 17 1.992 1.992 0 0 0 7 15.005Z" />
-            </svg>
+          <div class="hover-section button-spacer">
+            <span id="tt-load" class="tooltip-text tooltip-text-below" >Load scene</span >
+            <button aria-labelledby="tt-load" id="menu_load_scene" class="menu-button" ></button>
+            <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960" > <path d="M237.694-180.001q-23.529 0-40.611-17.082-17.082-17.082-17.082-40.611v-124.537h45.384v124.537q0 4.616 3.846 8.463 3.847 3.846 8.463 3.846h484.612q4.616 0 8.463-3.846 3.846-3.847 3.846-8.463v-124.537h45.384v124.537q0 23.529-17.082 40.611-17.082 17.082-40.611 17.082H237.694Zm219.614-150.308v-368.692L346.924-589.002l-32.614-32.23L480-786.922l165.69 165.69-32.614 32.23-110.384-109.999v368.692h-45.384Z" /> </svg>
           </div>
-          <div class="hover-section">
-            <span class="tooltip-text tooltip-text-above">Remove Voxel</span>
-            <input type="radio" name="tool-buttons" id="tool-remove-button" />
-            <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path
-                d="M18 19c0 1.66-1.34 3-3 3H8c-1.66 0-3-1.34-3-3V7H4V4h4.5l1-1h4l1 1H19v3h-1v12M6 7v12c0 1.1.9 2 2 2h7c1.1 0 2-.9 2-2V7H6m12-1V5h-4l-1-1h-3L9 5H5v1h13M8 9h1v10H8V9m6 0h1v10h-1V9Z" />
-            </svg>
+          <div class="hover-section button-spacer">
+            <span id="tt-rescale" class="tooltip-text tooltip-text-below" >Rescale Canvas</span >
+            <button aria-labelledby="tt-rescale" id="menu_rescale_canvas" class="menu-button" ></button>
+            <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style=" fill-rule: evenodd; clip-rule: evenodd; stroke-linejoin: round; stroke-miterlimit: 2; " viewBox="0 0 24 24" > <path d="M17.474 7.004v9.992a.477.477 0 0 1-.478.478H7.004a.477.477 0 0 1-.478-.478V7.004c0-.264.214-.478.478-.478h9.992c.264 0 .478.214.478.478Zm-.955.477H7.48v9.038h9.038V7.48Z" /> <path d="m7.774 16.946-2.557 2.556a.185.185 0 0 0 .131.316H12a.51.51 0 0 1 0 1.018H3.673a.508.508 0 0 1-.509-.509V12a.51.51 0 0 1 1.018 0v6.652a.185.185 0 0 0 .316.131l2.493-2.494v.657h.783Zm8.455-9.894 2.554-2.554a.185.185 0 0 0-.131-.316H12a.51.51 0 0 1 0-1.018h8.327a.508.508 0 0 1 .509.509V12a.51.51 0 0 1-1.018 0V5.348a.185.185 0 0 0-.316-.131l-2.564 2.564v-.729h-.709Z" /> </svg>
+          </div>
+          <div class="hover-section button-spacer">
+            <span id="tt-reset" class="tooltip-text tooltip-text-below" >Reset</span >
+            <button aria-labelledby="tt-reset" id="menu_reset" class="menu-button" ></button>
+            <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 -2 26 26" > <path d="M18,4C16.29,4 15.25,4.33 14.65,4.61C13.88,4.23 13,4 12,4C11,4 10.12,4.23 9.35,4.61C8.75,4.33 7.71,4 6,4C3,4 1,12 1,14C1,14.83 2.32,15.59 4.14,15.9C4.78,18.14 7.8,19.85 11.5,20V15.72C10.91,15.35 10,14.68 10,14C10,13 12,13 12,13C12,13 14,13 14,14C14,14.68 13.09,15.35 12.5,15.72V20C16.2,19.85 19.22,18.14 19.86,15.9C21.68,15.59 23,14.83 23,14C23,12 21,4 18,4M4.15,13.87C3.65,13.75 3.26,13.61 3,13.5C3.25,10.73 5.2,6.4 6.05,6C6.59,6 7,6.06 7.37,6.11C5.27,8.42 4.44,12.04 4.15,13.87M9,12A1,1 0 0,1 8,11C8,10.46 8.45,10 9,10A1,1 0 0,1 10,11C10,11.56 9.55,12 9,12M15,12A1,1 0 0,1 14,11C14,10.46 14.45,10 15,10A1,1 0 0,1 16,11C16,11.56 15.55,12 15,12M19.85,13.87C19.56,12.04 18.73,8.42 16.63,6.11C17,6.06 17.41,6 17.95,6C18.8,6.4 20.75,10.73 21,13.5C20.75,13.61 20.36,13.75 19.85,13.87Z" /> </svg>
           </div>
         </div>
-        <div class="color-wrapper">
-          <input type="color" id="color_value" class="color-pick" />
-          <div class="color-pick-shadow"></div>
-        </div>
-        <div class="hover-section">
-          <span class="tooltip-text tooltip-text-left">Reflectance</span>
-          <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="
-                fill-rule: evenodd;
-                clip-rule: evenodd;
-                stroke-linejoin: round;
-                stroke-miterlimit: 2;
-              " viewBox="0 0 24 24">
-            <path
-              d="M10.053 5.729a.489.489 0 0 1 .91.249v13.218H3.081a.561.561 0 0 1-.484-.85L10.053 5.73ZM3.814 18.215h6.168V7.778L3.814 18.215ZM13.825 5.729a.489.489 0 0 0-.91.249v13.218h7.882a.561.561 0 0 0 .485-.85C19.84 15.91 15.678 8.866 13.825 5.73Z" />
-            <path
-              d="m13.825 5.729 7.457 12.618a.562.562 0 0 1-.485.849h-7.882V5.978a.488.488 0 0 1 .91-.25Zm.072 2.049v10.437h6.167L13.897 7.778Z" />
-          </svg>
-          <input type="range" id="roughness_value" value="0" />
-        </div>
-        <div class="hover-section">
-          <span class="tooltip-text tooltip-text-left">Luminance</span>
-          <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path
-              d="M14 20c0 1.1-.9 2-2 2h-1c-1.1 0-2-.9-2-2h1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1h1m1-3c0 1.1-.9 2-2 2h-3c-1.1 0-2-.9-2-2v-2c-1.8-1.18-3-3.2-3-5.5a6.5 6.5 0 1 1 13 0c0 2.3-1.2 4.32-3 5.5v2m-6 0c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-2.6c1.78-.9 3-2.76 3-4.9C17 6.46 14.54 4 11.5 4S6 6.46 6 9.5c0 2.14 1.22 4 3 4.9V17Z" />
-          </svg>
-          <input type="range" id="lightness_value" value="0" />
-        </div>
-        <div class="hover-section">
-          <span class="tooltip-text tooltip-text-left">Opacity</span>
-          <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="
-                fill-rule: evenodd;
-                clip-rule: evenodd;
-                stroke-linejoin: round;
-                stroke-miterlimit: 2;
-              " viewBox="0 0 24 24">
-            <path d="M19.142 14.716a7.168 7.168 0 0 1-7.132 6.494 7.167 7.167 0 0 1-7.132-6.494h14.264Z" />
-            <path
-              d="M17.66 8A8.02 8.02 0 0 1 20 13.64c0 2-.78 4.11-2.34 5.67a7.99 7.99 0 0 1-11.32 0C4.78 17.75 4 15.64 4 13.64S4.78 9.56 6.34 8L12 2.35 17.66 8Zm-.729.73L12 3.808 7.069 8.73a6.982 6.982 0 0 0-2.037 4.91c0 1.743.678 3.581 2.038 4.94a6.96 6.96 0 0 0 9.86 0 7.041 7.041 0 0 0 2.038-4.94 6.982 6.982 0 0 0-2.037-4.91Z"
-              style="fill-rule: nonzero" />
-          </svg>
-          <input type="range" id="opacity_value" value="100" />
-        </div>
-        <!-- <div class="hover-section">
-            <span class="tooltip-text tooltip-text-below">Reset</span>
-            <button id="reset_button"></button>
-            <svg
-              class="tool-setting-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="M18,4C16.29,4 15.25,4.33 14.65,4.61C13.88,4.23 13,4 12,4C11,4 10.12,4.23 9.35,4.61C8.75,4.33 7.71,4 6,4C3,4 1,12 1,14C1,14.83 2.32,15.59 4.14,15.9C4.78,18.14 7.8,19.85 11.5,20V15.72C10.91,15.35 10,14.68 10,14C10,13 12,13 12,13C12,13 14,13 14,14C14,14.68 13.09,15.35 12.5,15.72V20C16.2,19.85 19.22,18.14 19.86,15.9C21.68,15.59 23,14.83 23,14C23,12 21,4 18,4M4.15,13.87C3.65,13.75 3.26,13.61 3,13.5C3.25,10.73 5.2,6.4 6.05,6C6.59,6 7,6.06 7.37,6.11C5.27,8.42 4.44,12.04 4.15,13.87M9,12A1,1 0 0,1 8,11C8,10.46 8.45,10 9,10A1,1 0 0,1 10,11C10,11.56 9.55,12 9,12M15,12A1,1 0 0,1 14,11C14,10.46 14.45,10 15,10A1,1 0 0,1 16,11C16,11.56 15.55,12 15,12M19.85,13.87C19.56,12.04 18.73,8.42 16.63,6.11C17,6.06 17.41,6 17.95,6C18.8,6.4 20.75,10.73 21,13.5C20.75,13.61 20.36,13.75 19.85,13.87Z"
-              />
-            </svg>
-          </div> -->
-      </div>
-    </section>
-    <section aria-label="Settings and Sliceview" id="settings">
-      <div class="settings-both-sections noselect">
-        <div class="section-wrapper settings-wrapper">
-          <h2>Settings</h2>
-          <div class="sub-section-panel">
-            <h3>Sun</h3>
-            <div class="settings-columns">
-              <span>Strength</span>
-              <input type="range" id="sun_strength" />
-              <span>Phi</span>
-              <input type="range" id="sun_phi" max="360" />
-              <span>Theta</span>
-              <input type="range" id="sun_theta" max="360" />
+        <div class="menu menu-right panel">
+          <div class="button-bar">
+            <div class="hover-section">
+              <span class="tooltip-text tooltip-text-above">Place Voxel</span>
+              <input type="radio" name="tool-buttons" id="tool-place-button" checked />
+              <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" > <path d="m19.71 8.04-2.34 2.33-3.75-3.75 2.34-2.33c.39-.39 1.04-.39 1.41 0l2.34 2.34c.39.37.39 1.02 0 1.41M3 17.25 13.06 7.18l3.75 3.75L6.75 21H3v-3.75M16.62 5.04l-1.54 1.54 2.34 2.34 1.54-1.54-2.34-2.34M15.36 11 13 8.64l-9 9.02V20h2.34l9.02-9Z" /> </svg>
+            </div>
+            <div class="hover-section">
+              <span class="tooltip-text tooltip-text-above">Replace Voxel</span>
+              <input type="radio" name="tool-buttons" id="tool-replace-button" />
+              <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style=" fill-rule: evenodd; clip-rule: evenodd; stroke-linejoin: round; stroke-miterlimit: 2; " viewBox="0 0 24 24" > <path d="M18.67 1.995c.504 0 1.008.181 1.411.584l1.321 1.322c.788.748.807 2.062.019 2.85l-8.96 8.96a1.007 1.007 0 0 1-1.422 0l-2.75-2.75a1.007 1.007 0 0 1 0-1.422l8.96-8.96a2.016 2.016 0 0 1 1.421-.584Zm0 1.005c-.26 0-.51.1-.71.29L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.04 0-1.41l-1.34-1.34c-.2-.2-.45-.29-.7-.29ZM7 14c1.66 0 3 1.34 3 3 0 2.21-1.79 4-4 4-1.5 0-3.08-.78-4-2 .84 0 2-.69 2-2 0-1.66 1.34-3 3-3Zm0 1.005A1.992 1.992 0 0 0 5.005 17c0 1.055-.5 1.842-1.159 2.345.65.412 1.414.65 2.154.65A2.994 2.994 0 0 0 8.995 17 1.992 1.992 0 0 0 7 15.005Z" /> </svg>
+            </div>
+            <div class="hover-section">
+              <span class="tooltip-text tooltip-text-above">Remove Voxel</span>
+              <input type="radio" name="tool-buttons" id="tool-remove-button" />
+              <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" > <path d="M18 19c0 1.66-1.34 3-3 3H8c-1.66 0-3-1.34-3-3V7H4V4h4.5l1-1h4l1 1H19v3h-1v12M6 7v12c0 1.1.9 2 2 2h7c1.1 0 2-.9 2-2V7H6m12-1V5h-4l-1-1h-3L9 5H5v1h13M8 9h1v10H8V9m6 0h1v10h-1V9Z" /> </svg>
             </div>
           </div>
-          <div class="sub-section-panel">
-            <h3>Ambient</h3>
-            <div class="settings-columns">
-              <span>Light</span>
-              <input type="range" id="ambient_light" value="100" />
-              <span>AO</span>
-              <input type="range" id="ao_strength" value="100" />
-            </div>
+          <div class="color-wrapper">
+            <input type="color" id="color_value" class="color-pick" />
+            <div class="color-pick-shadow"></div>
           </div>
-          <p id="fps"></p>
+          <div class="hover-section">
+            <span class="tooltip-text tooltip-text-left">Reflectance</span>
+            <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style=" fill-rule: evenodd; clip-rule: evenodd; stroke-linejoin: round; stroke-miterlimit: 2; " viewBox="0 0 24 24" > <path d="M10.053 5.729a.489.489 0 0 1 .91.249v13.218H3.081a.561.561 0 0 1-.484-.85L10.053 5.73ZM3.814 18.215h6.168V7.778L3.814 18.215ZM13.825 5.729a.489.489 0 0 0-.91.249v13.218h7.882a.561.561 0 0 0 .485-.85C19.84 15.91 15.678 8.866 13.825 5.73Z" /> <path d="m13.825 5.729 7.457 12.618a.562.562 0 0 1-.485.849h-7.882V5.978a.488.488 0 0 1 .91-.25Zm.072 2.049v10.437h6.167L13.897 7.778Z" /> </svg>
+            <input type="range" id="roughness_value" value="0" />
+          </div>
+          <div class="hover-section">
+            <span class="tooltip-text tooltip-text-left">Luminance</span>
+            <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" > <path d="M14 20c0 1.1-.9 2-2 2h-1c-1.1 0-2-.9-2-2h1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1h1m1-3c0 1.1-.9 2-2 2h-3c-1.1 0-2-.9-2-2v-2c-1.8-1.18-3-3.2-3-5.5a6.5 6.5 0 1 1 13 0c0 2.3-1.2 4.32-3 5.5v2m-6 0c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-2.6c1.78-.9 3-2.76 3-4.9C17 6.46 14.54 4 11.5 4S6 6.46 6 9.5c0 2.14 1.22 4 3 4.9V17Z" /> </svg>
+            <input type="range" id="lightness_value" value="0" />
+          </div>
+          <div class="hover-section">
+            <span class="tooltip-text tooltip-text-left">Opacity</span>
+            <svg class="tool-setting-icon" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style=" fill-rule: evenodd; clip-rule: evenodd; stroke-linejoin: round; stroke-miterlimit: 2; " viewBox="0 0 24 24" > <path d="M19.142 14.716a7.168 7.168 0 0 1-7.132 6.494 7.167 7.167 0 0 1-7.132-6.494h14.264Z" /> <path d="M17.66 8A8.02 8.02 0 0 1 20 13.64c0 2-.78 4.11-2.34 5.67a7.99 7.99 0 0 1-11.32 0C4.78 17.75 4 15.64 4 13.64S4.78 9.56 6.34 8L12 2.35 17.66 8Zm-.729.73L12 3.808 7.069 8.73a6.982 6.982 0 0 0-2.037 4.91c0 1.743.678 3.581 2.038 4.94a6.96 6.96 0 0 0 9.86 0 7.041 7.041 0 0 0 2.038-4.94 6.982 6.982 0 0 0-2.037-4.91Z" style="fill-rule: nonzero" /> </svg>
+            <input type="range" id="opacity_value" value="100" />
+          </div>
         </div>
-        <div class="section-wrapper slices-wrapper">
-          <h2>Slices</h2>
-          <canvas id="slice-canvas" width="256" height="256"></canvas>
-          <img src="assets/png/vertical.png" width="256" height="256"
-            alt="The slider decides the vertical slice to display." />
-          <br />
-          <a>Vertical slice:</a>
-          <input id="slice-input" type="range" value="100" />
+      </section>
+      <section aria-label="Settings and Sliceview" id="settings">
+        <div class="settings-both-sections noselect">
+          <div class="section-wrapper settings-wrapper">
+            <h2>Settings</h2>
+            <div class="sub-section-panel">
+              <h3>Sun</h3>
+              <div class="settings-columns">
+                <span>Strength</span>
+                <input type="range" id="sun_strength" />
+                <span>Phi</span>
+                <input type="range" id="sun_phi" max="360" />
+                <span>Theta</span>
+                <input type="range" id="sun_theta" max="360" />
+              </div>
+            </div>
+            <div class="sub-section-panel">
+              <h3>Ambient</h3>
+              <div class="settings-columns">
+                <span>Light</span>
+                <input type="range" id="ambient_light" value="100" />
+                <span>AO</span>
+                <input type="range" id="ao_strength" value="100" />
+              </div>
+            </div>
+            <p id="fps"></p>
+          </div>
+          <div class="section-wrapper slices-wrapper">
+            <h2>Slices</h2>
+            <canvas id="slice-canvas" width="256" height="256"></canvas>
+            <img src="assets/png/vertical.png" width="256" height="256" alt="The slider decides the vertical slice to display." />
+            <br />
+            <a>Vertical slice:</a>
+            <input id="slice-input" type="range" value="100" />
+          </div>
         </div>
-      </div>
-    </section>
-    <section aria-label="Resources" id="resources">
-      <div class="section-wrapper">
-        <h2>Resources</h2>
-        <p>
-          <a target="_blank"
-            href="https://github.com/cgyurgyik/fast-voxel-traversal-algorithm/blob/master/overview/FastVoxelTraversalOverview.md">Overview
-            of the Fast Voxel Traversal Algorithm</a>
-          <a target="_blank" href="https://www.shadertoy.com/view/ldl3DS">Example implementation of voxel ambient
-            occlusion</a>
-          <a target="_blank" href="https://raytracing.github.io/">Raytracing in one weekend</a>
-          <a target="_blank" href="https://www.w3.org/TR/webgpu/">W3C WebGPU Spec</a>
-          <a target="_blank" href="https://www.w3.org/TR/WGSL/">W3C WGSL Spec</a>
-        </p>
-        <video width="960" height="536" autoplay loop muted>
-          <source src="assets/video/monkey.mp4" type="video/mp4" />
-          <source src="assets/video/monkey.webm" type="video/webm" />
-          <source src="assets/video/monkey.mov" type="video/mov" />
-          Your browser doesn't support this video of a monkey.
-        </video>
-        <a target="_blank" href="assets/pdf/VOXELaccessible.pdf">Resources PDF</a>
-      </div>
-    </section>
-  </div>
-  <script src="./dist/main.js"></script>
-</body>
-
+      </section>
+      <section aria-label="Resources" id="resources">
+        <div class="section-wrapper">
+          <h2>Resources</h2>
+          <p>
+            <a target="_blank" href="https://github.com/cgyurgyik/fast-voxel-traversal-algorithm/blob/master/overview/FastVoxelTraversalOverview.md" >Overview of the Fast Voxel Traversal Algorithm</a >
+            <a target="_blank" href="https://www.shadertoy.com/view/ldl3DS" >Example implementation of voxel ambient occlusion</a >
+            <a target="_blank" href="https://raytracing.github.io/" >Raytracing in one weekend</a >
+            <a target="_blank" href="https://www.w3.org/TR/webgpu/" >W3C WebGPU Spec</a >
+            <a target="_blank" href="https://www.w3.org/TR/WGSL/" >W3C WGSL Spec</a >
+          </p>
+          <video width="960" height="536" autoplay loop muted>
+            <source src="assets/video/monkey.mp4" type="video/mp4" />
+            <source src="assets/video/monkey.webm" type="video/webm" />
+            <source src="assets/video/monkey.mov" type="video/mov" />
+            Your browser doesn't support this video of a monkey.
+          </video>
+          <a target="_blank" href="assets/pdf/VOXELaccessible.pdf" >Resources PDF</a >
+        </div>
+      </section>
+    </div>
+    <script src="./dist/main.js"></script>
+  </body>
 </html>
