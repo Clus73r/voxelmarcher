@@ -5,6 +5,7 @@ import { HDRTexture } from "./hdrtex";
 import { Controller } from "./controller";
 import { switch_latte, switch_mocha } from "./theme_switch";
 import { SliceRenderer } from "./slice_renderer";
+const defaultScene = require("../assets/scene/meadow.json");
 
 const canvas = <HTMLCanvasElement>document.getElementById("canv");
 const fps = <HTMLParagraphElement>document.getElementById("fps");
@@ -17,6 +18,8 @@ let renderer = new Renderer(canvas, scene, controller.camera);
 
 scene.initialize_default_grid();
 renderer.initialize(false);
+
+scene.load_scene(defaultScene);
 
 let slice_renderer = new SliceRenderer(slice_canvas, scene);
 slice_renderer.slice = 6;

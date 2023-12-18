@@ -153,6 +153,10 @@ export class Scene {
 
   deserialize_scene(s: string) {
     const des = JSON.parse(s);
+    this.load_scene(des);
+  }
+  
+  load_scene(des: any) {
     this.grid = des.grid;
     // this.background_color = des.background_color;
     this.grid_size = this.grid_size;
